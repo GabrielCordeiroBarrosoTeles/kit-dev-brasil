@@ -6,6 +6,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [0.2.0] - 2026-10-19
+
 ### Adicionado
 
 - Gerador de **pessoa** e de **empresa** fictícias com dados coerentes entre si: CEP dentro da faixa da cidade, DDD da cidade, título de eleitor com o código da UF, e-mail derivado do nome no domínio reservado `example.com` e idade compatível com a data de nascimento. Escolha da UF e exportação como JSON, objeto TypeScript ou texto, no painel e nos comandos **Gerar pessoa fictícia…** e **Gerar empresa fictícia…**.

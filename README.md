@@ -12,7 +12,7 @@
   <a href="https://github.com/users/GabrielCordeiroBarrosoTeles/projects/4"><img src="https://img.shields.io/badge/roadmap-GitHub_Projects-blue" alt="Roadmap"></a>
 </p>
 
-> **Em desenvolvimento.** Já funciona localmente (veja abaixo), mas ainda não foi publicado no Marketplace. Acompanhe o [roadmap](https://github.com/users/GabrielCordeiroBarrosoTeles/projects/4) e dê uma ⭐ para ser avisado.
+> **Instale pelo [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=GabrielCordeiro.kit-dev-brasil)** ou pelo VS Code: abra Extensões (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>) e procure **Kit Dev Brasil**. Acompanhe o [roadmap](https://github.com/users/GabrielCordeiroBarrosoTeles/projects/4) e dê uma ⭐.
 
 ## Por quê
 
