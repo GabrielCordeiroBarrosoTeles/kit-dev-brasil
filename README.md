@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/icon.png" width="96" alt="Ícone do Kit Dev Brasil"></p>
+
 <h1 align="center">Kit Dev Brasil</h1>
 
 <p align="center">

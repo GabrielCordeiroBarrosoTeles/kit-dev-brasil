@@ -5,6 +5,11 @@
   "version": "0.0.0",
   "publisher": "GabrielCordeiro",
   "license": "MIT",
+  "icon": "assets/icon.png",
+  "galleryBanner": {
+    "color": "#0B5D3B",
+    "theme": "dark"
+  },
   "author": {
     "name": "Gabriel Cordeiro"
   },

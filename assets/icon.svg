@@ -1,5 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0B7A3B"/>
-  <path d="M256 92 L420 256 L256 420 L92 256 Z" fill="none" stroke="#FFD54A" stroke-width="18" stroke-linejoin="round" opacity="0.9"/>
-  <text x="256" y="300" text-anchor="middle" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="128" font-weight="800" fill="#FFFFFF" letter-spacing="-4">BR</text>
+  <rect width="512" height="512" rx="112" fill="#0B5D3B"/>
+  <g fill="none" stroke="#F4C430" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M204 152 L96 256 L204 360"/>
+    <path d="M308 152 L416 256 L308 360"/>
+  </g>
+  <circle cx="256" cy="256" r="42" fill="#2F6BFF"/>
 </svg>
