@@ -6,6 +6,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [0.3.0] - 2026-10-19
+
 ### Adicionado
 
 - **Gerar em lote:** de 1 a 1000 pessoas, empresas ou documentos em JSON, CSV, SQL (`INSERT`) ou array TypeScript, abertos numa aba nova. Pelo painel (seção **Gerar em lote**) e pelo comando **Gerar em lote…**.
