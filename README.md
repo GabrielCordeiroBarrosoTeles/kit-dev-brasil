@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=GabrielCordeiro.kit-dev-brasil"><img src="https://img.shields.io/badge/VS_Code_Marketplace-instalar-0B5D3B" alt="Instalar no VS Code Marketplace"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/GabrielCordeiroBarrosoTeles/kit-dev-brasil" alt="Licença MIT"></a>
   <a href="https://github.com/GabrielCordeiroBarrosoTeles/kit-dev-brasil/stargazers"><img src="https://img.shields.io/github/stars/GabrielCordeiroBarrosoTeles/kit-dev-brasil" alt="Estrelas no GitHub"></a>
   <a href="https://github.com/users/GabrielCordeiroBarrosoTeles/projects/4"><img src="https://img.shields.io/badge/roadmap-GitHub_Projects-blue" alt="Roadmap"></a>
