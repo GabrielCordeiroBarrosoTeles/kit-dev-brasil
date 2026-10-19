@@ -1,0 +1,57 @@
+name: Reportar um bug
+description: Algo não funciona como deveria.
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar! Procure nas issues existentes antes de abrir uma nova.
+        **Nunca cole dados reais** (CPF, PIX ou boleto de pessoas de verdade). Use dados de teste.
+  - type: textarea
+    id: description
+    attributes:
+      label: O que aconteceu?
+      description: Descreva o problema e o que você esperava que acontecesse.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Como reproduzir
+      placeholder: |
+        1. Abra um arquivo .ts
+        2. Passe o mouse sobre um PIX copia-e-cola
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Exemplo de entrada (dados de teste)
+      description: O texto que causou o problema, usando dados fictícios.
+      render: text
+  - type: dropdown
+    id: os
+    attributes:
+      label: Sistema operacional
+      options:
+        - macOS
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: editor-version
+    attributes:
+      label: Editor e versão
+      description: Help → About. Informe o nome se não for o VS Code (Cursor, Windsurf, VSCodium…).
+      placeholder: VS Code 1.106.0
+    validations:
+      required: true
+  - type: input
+    id: extension-version
+    attributes:
+      label: Versão do Kit Dev Brasil
+      placeholder: 0.1.0
+    validations:
+      required: true

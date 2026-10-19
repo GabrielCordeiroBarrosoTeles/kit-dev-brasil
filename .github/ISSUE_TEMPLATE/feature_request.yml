@@ -1,0 +1,28 @@
+name: Sugerir uma funcionalidade
+description: Uma ideia ou melhoria.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema
+      description: O que você está tentando fazer e o que atrapalha hoje?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solução proposta
+      description: Como o Kit Dev Brasil poderia resolver isso?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribuição
+      options:
+        - label: Quero implementar isso eu mesmo.

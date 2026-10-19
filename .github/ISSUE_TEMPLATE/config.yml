@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Dúvidas e ajuda
+    url: https://github.com/GabrielCordeiroBarrosoTeles/kit-dev-brasil/discussions/categories/q-a
+    about: Pergunte e tire dúvidas com a comunidade nas Discussions.
+  - name: Ideias
+    url: https://github.com/GabrielCordeiroBarrosoTeles/kit-dev-brasil/discussions/categories/ideas
+    about: Discuta ideias maiores antes de abrir um pedido de funcionalidade.
+  - name: Vulnerabilidade de segurança
+    url: https://github.com/GabrielCordeiroBarrosoTeles/kit-dev-brasil/security/advisories/new
+    about: Reporte problemas de segurança de forma privada.
