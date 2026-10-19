@@ -49,9 +49,16 @@ Contribuições são muito bem-vindas! Leia o [guia de contribuição](CONTRIBUT
 
 Encontrou uma falha de segurança? Siga a [política de segurança](SECURITY.md) em vez de abrir uma issue pública.
 
-## Apoie o projeto
+## ☕ Apoie o projeto
 
-O Kit Dev Brasil é gratuito e open source. Se ele te ajudar, dê uma ⭐, compartilhe com outros devs ou apoie pelo [GitHub Sponsors](https://github.com/sponsors/GabrielCordeiroBarrosoTeles).
+O Kit Dev Brasil é gratuito e open source. Se ele te poupar tempo, você pode apoiar o desenvolvimento:
+
+- [GitHub Sponsors](https://github.com/sponsors/GabrielCordeiroBarrosoTeles)
+- 🇧🇷 **PIX**: aponte a câmera do app do seu banco para o QR code abaixo
+
+<img src="assets/pix-card.png" width="260" alt="Cartão com QR code PIX para apoiar o Kit Dev Brasil">
+
+Dar uma ⭐ no repositório e compartilhar com outros devs também ajuda muito.
 
 Do mesmo autor: [Reflect for Android](https://github.com/GabrielCordeiroBarrosoTeles/reflect-android), para espelhar e controlar seu celular Android dentro do VS Code.
 
