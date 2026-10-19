@@ -6,6 +6,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [0.2.1] - 2026-10-19
+
+### Adicionado
+
+- Botão **Sponsor** na página da extensão, apontando para o GitHub Sponsors.
+
 ## [0.2.0] - 2026-10-19
 
 ### Adicionado

@@ -2,13 +2,16 @@
   "name": "kit-dev-brasil",
   "displayName": "Kit Dev Brasil: CPF, CNPJ, PIX, Boleto e mais",
   "description": "O 4Devs dentro do VS Code: gere pessoas e empresas fictícias coerentes, gere e valide CPF, CNPJ, CEP, CNH, RG, PIS, título, placa, cartão e outros, entenda boletos e PIX e gere PIX de teste com QR code. Tudo local.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "GabrielCordeiro",
   "license": "MIT",
   "icon": "assets/icon.png",
   "galleryBanner": {
     "color": "#0B5D3B",
     "theme": "dark"
+  },
+  "sponsor": {
+    "url": "https://github.com/sponsors/GabrielCordeiroBarrosoTeles"
   },
   "author": {
     "name": "Gabriel Cordeiro"
