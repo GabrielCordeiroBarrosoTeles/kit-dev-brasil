@@ -1,7 +1,7 @@
 {
   "name": "kit-dev-brasil",
-  "displayName": "Kit Dev Brasil: CPF, CNPJ e PIX",
-  "description": "O 4Devs dentro do VS Code: gere e valide CPF e CNPJ e entenda PIX copia-e-cola sem sair do editor. Tudo local.",
+  "displayName": "Kit Dev Brasil: CPF, CNPJ, PIX, Boleto e mais",
+  "description": "O 4Devs dentro do VS Code: gere e valide CPF, CNPJ, CNH, RG, PIS, título, placa, cartão e outros, entenda boletos e PIX e gere PIX de teste com QR code. Tudo local.",
   "version": "0.0.0",
   "publisher": "GabrielCordeiro",
   "license": "MIT",
@@ -30,9 +30,17 @@
     "cnpj alfanumerico",
     "pix",
     "pix copia e cola",
-    "br code",
     "qr code pix",
     "boleto",
+    "linha digitavel",
+    "codigo de barras",
+    "cnh",
+    "rg",
+    "pis",
+    "titulo de eleitor",
+    "renavam",
+    "placa mercosul",
+    "cartao de credito",
     "gerador",
     "gerador de cpf",
     "gerador de cnpj",
@@ -43,7 +51,10 @@
     "dados de teste",
     "test data",
     "mascara",
-    "pagamentos"
+    "pagamentos",
+    "fake data",
+    "febraban",
+    "cns"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
@@ -67,6 +78,11 @@
         "category": "Kit Dev Brasil"
       },
       {
+        "command": "kitDevBrasil.generateDocument",
+        "title": "Gerar documento…",
+        "category": "Kit Dev Brasil"
+      },
+      {
         "command": "kitDevBrasil.formatSelection",
         "title": "Formatar seleção",
         "category": "Kit Dev Brasil"
@@ -74,6 +90,11 @@
       {
         "command": "kitDevBrasil.unformatSelection",
         "title": "Remover máscara da seleção",
+        "category": "Kit Dev Brasil"
+      },
+      {
+        "command": "kitDevBrasil.convertBoleto",
+        "title": "Converter boleto (linha digitável ↔ código de barras)",
         "category": "Kit Dev Brasil"
       },
       {
@@ -88,7 +109,7 @@
       },
       {
         "command": "kitDevBrasil.validateInput",
-        "title": "Validar CPF ou CNPJ (colar)…",
+        "title": "Validar documento (colar)…",
         "category": "Kit Dev Brasil"
       },
       {
@@ -142,6 +163,10 @@
           "group": "1_generate@3"
         },
         {
+          "command": "kitDevBrasil.generateDocument",
+          "group": "1_generate@4"
+        },
+        {
           "command": "kitDevBrasil.formatSelection",
           "group": "2_transform@1",
           "when": "editorHasSelection"
@@ -149,6 +174,11 @@
         {
           "command": "kitDevBrasil.unformatSelection",
           "group": "2_transform@2",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "kitDevBrasil.convertBoleto",
+          "group": "2_transform@3",
           "when": "editorHasSelection"
         },
         {
@@ -197,5 +227,8 @@
     "happy-dom": "21.0.3",
     "typescript": "5.9.3",
     "vitest": "4.1.12"
+  },
+  "dependencies": {
+    "qrcode-generator": "2.0.4"
   }
 }

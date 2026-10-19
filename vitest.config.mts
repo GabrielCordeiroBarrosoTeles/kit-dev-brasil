@@ -14,7 +14,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: ['**/types.ts'],
+      exclude: ['**/types.ts', 'src/shared/sidebarProtocol.ts'],
       reporter: [['text', { skipFull: false }], 'html', 'lcov', 'json-summary'],
       thresholds: {
         lines: 100,

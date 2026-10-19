@@ -1,10 +1,11 @@
 import './sidebar.css';
 import type { HostToSidebarMessage } from '../shared/sidebarProtocol';
-import { SIDEBAR_GENERATORS } from '../shared/sidebarProtocol';
+import { GENERATOR_GROUPS } from '../shared/generatorCatalog';
 import { DocumentValidator } from './DocumentValidator';
 import { queryElement } from './dom';
 import { GeneratorList } from './GeneratorList';
-import { PixInspector } from './PixInspector';
+import { InspectorSection } from './InspectorSection';
+import { PixGeneratorForm } from './PixGeneratorForm';
 import './types';
 
 const bootstrap = (): void => {
@@ -12,17 +13,46 @@ const bootstrap = (): void => {
   const post = (message: Parameters<typeof vscode.postMessage>[0]): void => vscode.postMessage(message);
   const element = <T extends Element>(selector: string): T => queryElement<T>(document, selector);
 
-  const generators = new GeneratorList(element('#generators'), element('#formatted'), SIDEBAR_GENERATORS, post);
+  const generators = new GeneratorList(element('#generators'), element('#formatted'), GENERATOR_GROUPS, post);
   const validator = new DocumentValidator(element('#document-input'), element('#document-result'), element('#copy-formatted'), post);
-  const pix = new PixInspector(
+  const section = (prefix: string) => ({
+    input: element<HTMLTextAreaElement>(`#${prefix}-input`),
+    summary: element<HTMLElement>(`#${prefix}-summary`),
+    fields: element<HTMLElement>(`#${prefix}-fields`),
+    issues: element<HTMLElement>(`#${prefix}-issues`),
+    actions: element<HTMLElement>(`#${prefix}-actions`),
+  });
+  const pix = new InspectorSection(
+    section('pix'),
+    (text) => ({ type: 'inspect-pix', text }),
+    [
+      { button: element('#open-pix-report'), message: (text) => ({ type: 'open-pix-report', text }) },
+      { button: element('#copy-pix-json'), message: (text) => ({ type: 'copy-pix-json', text }) },
+    ],
+    post,
+  );
+  const boleto = new InspectorSection(
+    section('boleto'),
+    (text) => ({ type: 'inspect-boleto', text }),
+    [
+      { button: element('#copy-boleto-line'), message: (text) => ({ type: 'copy-boleto', text, format: 'line' }) },
+      { button: element('#copy-boleto-barcode'), message: (text) => ({ type: 'copy-boleto', text, format: 'barcode' }) },
+    ],
+    post,
+  );
+  const pixGenerator = new PixGeneratorForm(
     {
-      input: element('#pix-input'),
-      summary: element('#pix-summary'),
-      fields: element('#pix-fields'),
-      issues: element('#pix-issues'),
-      actions: element('#pix-actions'),
-      openReport: element('#open-pix-report'),
-      copyJson: element('#copy-pix-json'),
+      key: element('#pix-form-key'),
+      name: element('#pix-form-name'),
+      city: element('#pix-form-city'),
+      amount: element('#pix-form-amount'),
+      txid: element('#pix-form-txid'),
+      generate: element('#generate-pix'),
+      issues: element('#pix-form-issues'),
+      result: element('#pix-generated'),
+      qr: element('#pix-qr'),
+      code: element('#pix-code'),
+      copy: element('#copy-pix-code'),
     },
     post,
   );
@@ -31,12 +61,22 @@ const bootstrap = (): void => {
 
   window.addEventListener('message', (event: MessageEvent<HostToSidebarMessage>) => {
     const message = event.data;
-    if (message.type === 'state') {
-      generators.render(message.state);
-    } else if (message.type === 'document-result') {
-      validator.render(message.view);
-    } else {
-      pix.render(message.view);
+    switch (message.type) {
+      case 'state':
+        generators.render(message.state);
+        break;
+      case 'document-result':
+        validator.render(message.view);
+        break;
+      case 'pix-result':
+        pix.render(message.view);
+        break;
+      case 'boleto-result':
+        boleto.render(message.view);
+        break;
+      case 'pix-generated':
+        pixGenerator.render(message.view);
+        break;
     }
   });
 

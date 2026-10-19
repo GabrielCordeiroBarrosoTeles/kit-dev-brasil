@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
+import { decodeTestBoleto } from '../../fakes/boleto';
+import { createDocumentCatalog } from '../../../src/application/catalog';
 import { TextInspector } from '../../../src/application/inspection/TextInspector';
 import { TokenScanner } from '../../../src/application/scanning/TokenScanner';
 import { Cnpj } from '../../../src/domain/documents/Cnpj';
 import { Cpf } from '../../../src/domain/documents/Cpf';
 import { DocumentRegistry } from '../../../src/domain/documents/DocumentRegistry';
 import { decodeBrCode } from '../../../src/domain/pix/decodeBrCode';
+import { NOT_A_DOCUMENT } from '../../../src/presentation/candidateSummary';
 import { InspectionRenderer } from '../../../src/presentation/InspectionRenderer';
 import { firstSelection, pixAtCursor } from '../../../src/vscode/commands/editorText';
 import { InspectPixInputCommand, ValidateInputCommand } from '../../../src/vscode/commands/InputCommands';
@@ -14,7 +17,7 @@ import type { InputRequest } from '../../../src/vscode/types';
 import { editorProvider, FakeEditor, FakeNotifier } from '../../fakes/FakeEditor';
 import { BCB_PIX, VALID_CPF, VALID_CPF_DIGITS } from '../../fakes/samples';
 
-const inspector = new TextInspector(new DocumentRegistry([new Cpf(), new Cnpj()]), decodeBrCode);
+const inspector = new TextInspector(new DocumentRegistry([new Cpf(), new Cnpj()]), decodeBrCode, decodeTestBoleto);
 const renderer = new InspectionRenderer();
 
 const promptAnswering = (answer: string | undefined) => {
@@ -53,7 +56,7 @@ describe('ValidateInputCommand', () => {
     expect(request?.value).toBe(VALID_CPF);
     expect(request?.title).toBe(COMMAND_MESSAGES.validateTitle);
     expect(request?.feedback('  ')).toBeUndefined();
-    expect(request?.feedback('abc')).toEqual({ valid: false, message: COMMAND_MESSAGES.notADocumentShort });
+    expect(request?.feedback('abc')).toEqual({ valid: false, message: NOT_A_DOCUMENT });
     expect(request?.feedback(VALID_CPF_DIGITS)).toEqual({ valid: true, message: `CPF ${VALID_CPF} é válido` });
     expect(request?.feedback('529.982.247-26')).toMatchObject({ valid: false });
   });
@@ -72,6 +75,16 @@ describe('ValidateInputCommand', () => {
     const { command, notifier } = setup(' abc ');
     await command.execute();
     expect(notifier.warnings).toEqual([COMMAND_MESSAGES.notADocument('abc')]);
+  });
+
+  it('offers no copy when the value is invalid for every candidate type', async () => {
+    const inspector11 = new TextInspector(new DocumentRegistry(createDocumentCatalog().types), decodeBrCode, decodeTestBoleto);
+    const prompt = promptAnswering('00000000000');
+    const notifier = new FakeNotifier(COMMAND_MESSAGES.copyFormatted);
+    const clipboard = clipboardFake();
+    await new ValidateInputCommand('kit.validateInput', { inspector: inspector11, renderer, prompt, editors: editorProvider(undefined), clipboard, notifier }).execute();
+    expect(notifier.infos).toEqual(['Não é válido como CPF, CNH, PIS/PASEP nem RENAVAM']);
+    expect(clipboard.writeText).not.toHaveBeenCalled();
   });
 
   it('shows the result and copies the formatted value on request', async () => {

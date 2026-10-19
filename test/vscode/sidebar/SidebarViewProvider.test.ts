@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { decodeTestBoleto } from '../../fakes/boleto';
 import type * as vscode from 'vscode';
 import { DocumentGenerator } from '../../../src/application/generation/DocumentGenerator';
 import { GeneratedValues } from '../../../src/application/generation/GeneratedValues';
@@ -16,7 +17,8 @@ import { renderSidebarHtml } from '../../../src/vscode/sidebar/sidebarHtml';
 import { SidebarViewProvider } from '../../../src/vscode/sidebar/SidebarViewProvider';
 import { FakeNotifier, fakeSettings } from '../../fakes/FakeEditor';
 import { sequenceRandom } from '../../fakes/random';
-import { BCB_PIX, VALID_CNPJ_DIGITS, VALID_CPF, VALID_CPF_DIGITS } from '../../fakes/samples';
+import { BCB_PIX, OFFICIAL_BANK_BARCODE, OFFICIAL_BANK_LINE, VALID_CNPJ_DIGITS, VALID_CPF, VALID_CPF_DIGITS } from '../../fakes/samples';
+import { catalogGenerators, emptyGenerated } from '../../fakes/generators';
 import { Uri } from '../../mocks/vscode';
 
 const setup = () => {
@@ -24,11 +26,10 @@ const setup = () => {
   const cnpj = new Cnpj();
   const queue = [VALID_CPF_DIGITS, '12345678909'];
   const generator = new DocumentGenerator<GeneratorId>(
-    {
+    catalogGenerators({
       cpf: { label: 'CPF', type: cpf, generate: () => queue.shift() ?? VALID_CPF_DIGITS },
       cnpj: { label: 'CNPJ', type: cnpj, generate: () => VALID_CNPJ_DIGITS },
-      alphanumericCnpj: { label: 'CNPJ alfanumérico', type: cnpj, generate: () => VALID_CNPJ_DIGITS },
-    },
+    }),
     sequenceRandom([0]),
   );
   const values = new GeneratedValues(generator);
@@ -43,9 +44,11 @@ const setup = () => {
     {
       values,
       settings,
-      inspector: new TextInspector(new DocumentRegistry([cpf, cnpj]), decodeBrCode),
+      inspector: new TextInspector(new DocumentRegistry([cpf, cnpj]), decodeBrCode, decodeTestBoleto),
       renderer: new InspectionRenderer(),
       decode: decodeBrCode,
+      decodeBoleto: decodeTestBoleto,
+      qrCode: (text: string) => `data:qr,${text.length}`,
       report: report as unknown as PixReport,
       clipboard,
       notifier,
@@ -82,7 +85,7 @@ const setup = () => {
 describe('renderSidebarHtml', () => {
   it('locks scripts to the nonce and styles to the webview source', () => {
     const html = renderSidebarHtml({ cspSource: 'vscode-resource:', scriptUri: 'app.js', styleUri: 'app.css', nonce: 'N1' });
-    expect(html).toContain("default-src 'none'; style-src vscode-resource:; script-src 'nonce-N1';");
+    expect(html).toContain("default-src 'none'; img-src data:; style-src vscode-resource:; script-src 'nonce-N1';");
     expect(html).toContain('<script nonce="N1" src="app.js"></script>');
     expect(html).toContain('<link rel="stylesheet" href="app.css">');
     expect(html).toContain('id="document-input"');
@@ -102,7 +105,7 @@ describe('SidebarViewProvider', () => {
   it('sends the state when ready and whenever a value is generated', async () => {
     const { send, posted, clipboard, notifier } = setup();
     await send({ type: 'ready' });
-    expect(posted.at(-1)).toEqual({ type: 'state', state: { generated: { cpf: undefined, cnpj: undefined, alphanumericCnpj: undefined }, formatted: true } });
+    expect(posted.at(-1)).toEqual({ type: 'state', state: { generated: emptyGenerated(), formatted: true } });
     await send({ type: 'generate', id: 'cpf' });
     expect(posted.at(-1)).toMatchObject({ type: 'state', state: { generated: { cpf: VALID_CPF } } });
     expect(clipboard.writeText).toHaveBeenLastCalledWith(VALID_CPF);
@@ -167,6 +170,39 @@ describe('SidebarViewProvider', () => {
     expect(notifier.statuses).toEqual([COMMAND_MESSAGES.jsonCopied]);
   });
 
+  it('inspects boletos live and copies either representation', async () => {
+    const { send, posted, clipboard, notifier } = setup();
+    await send({ type: 'inspect-boleto', text: OFFICIAL_BANK_LINE });
+    expect(posted.at(-1)).toMatchObject({ type: 'boleto-result', view: { state: 'valid', issues: [] } });
+    await send({ type: 'inspect-boleto', text: ' ' });
+    expect(posted.at(-1)).toEqual({ type: 'boleto-result', view: { state: 'empty', summary: '', fields: [], issues: [] } });
+    await send({ type: 'copy-boleto', text: OFFICIAL_BANK_LINE, format: 'barcode' });
+    await send({ type: 'copy-boleto', text: OFFICIAL_BANK_BARCODE, format: 'line' });
+    await send({ type: 'copy-boleto', text: '123', format: 'line' });
+    expect(clipboard.writeText.mock.calls.map(([text]) => text)).toEqual([OFFICIAL_BANK_BARCODE, '00191234546789012345767890123457196360000123400']);
+    expect(notifier.statuses).toEqual([COMMAND_MESSAGES.boletoCopied('barcode'), COMMAND_MESSAGES.boletoCopied('line')]);
+  });
+
+  it('generates test PIX codes with a QR code and reports form issues', async () => {
+    const { send, posted } = setup();
+    await send({ type: 'generate-pix', form: { key: 'a@b.co', merchantName: 'FULANO', merchantCity: 'RECIFE', amount: '', txid: '' } });
+    expect(posted.at(-1)).toMatchObject({ type: 'pix-generated', view: { code: expect.stringMatching(/^000201/), qrDataUrl: expect.stringMatching(/^data:qr,/), issues: [] } });
+    await send({ type: 'generate-pix', form: { key: 7 } });
+    expect(posted.at(-1)).toMatchObject({ view: { code: undefined, qrDataUrl: undefined, issues: ['Chave: obrigatório', 'Nome do recebedor: obrigatório', 'Cidade: obrigatório'] } });
+    await send({ type: 'generate-pix', form: null });
+    expect(posted.at(-1)).toMatchObject({ view: { code: undefined } });
+  });
+
+  it('copies plain text only when it is a reasonable string', async () => {
+    const { send, clipboard, notifier } = setup();
+    await send({ type: 'copy-text', text: 'abc' });
+    await send({ type: 'copy-text', text: '' });
+    await send({ type: 'copy-text', text: 'x'.repeat(2001) });
+    await send({ type: 'copy-text', text: 5 });
+    expect(clipboard.writeText.mock.calls).toEqual([['abc']]);
+    expect(notifier.statuses).toEqual([COMMAND_MESSAGES.textCopied]);
+  });
+
   it('runs the selection commands', async () => {
     const { send, formatSelection, unformatSelection } = setup();
     await send({ type: 'format-selection' });
@@ -195,16 +231,15 @@ describe('SidebarViewProvider', () => {
 
 function setupServices() {
   const cpf = new Cpf();
-  const generator = new DocumentGenerator<GeneratorId>(
-    { cpf: { label: 'CPF', type: cpf, generate: () => '' }, cnpj: { label: 'CNPJ', type: cpf, generate: () => '' }, alphanumericCnpj: { label: 'A', type: cpf, generate: () => '' } },
-    sequenceRandom([0]),
-  );
+  const generator = new DocumentGenerator<GeneratorId>(catalogGenerators(), sequenceRandom([0]));
   return {
     values: new GeneratedValues(generator),
     settings: fakeSettings(),
-    inspector: new TextInspector(new DocumentRegistry([cpf]), decodeBrCode),
+    inspector: new TextInspector(new DocumentRegistry([cpf]), decodeBrCode, decodeTestBoleto),
     renderer: new InspectionRenderer(),
     decode: decodeBrCode,
+    decodeBoleto: decodeTestBoleto,
+    qrCode: () => '',
     report: {} as PixReport,
     clipboard: { writeText: () => Promise.resolve() },
     notifier: new FakeNotifier(),

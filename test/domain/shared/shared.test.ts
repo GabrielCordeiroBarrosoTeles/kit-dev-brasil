@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { cyclicWeightsFromRight, descendingWeights, mod11CheckDigit } from '../../../src/domain/shared/checkDigit';
-import { randomAlphanumeric, randomDigits, randomFrom } from '../../../src/domain/shared/random';
+import { ascendingWeights, cyclicWeightsFromRight, descendingWeights, luhnCheckDigit, mod11CheckDigit, toDigits, weightedSum } from '../../../src/domain/shared/checkDigit';
+import { pick, randomAlphanumeric, randomDigits, randomFrom } from '../../../src/domain/shared/random';
 import { fail, ok } from '../../../src/domain/shared/Result';
 import { sequenceRandom } from '../../fakes/random';
 
@@ -19,7 +19,22 @@ describe('mod11CheckDigit', () => {
   });
 });
 
+describe('more check digit helpers', () => {
+  it('sums with weights, builds ascending weights and computes Luhn digits', () => {
+    expect(weightedSum([1, 2], ascendingWeights(3))).toBe(11);
+    expect(toDigits('120')).toEqual([1, 2, 0]);
+    expect(luhnCheckDigit('411111111111111')).toBe(1);
+    expect(luhnCheckDigit('7992739871')).toBe(3);
+    expect(luhnCheckDigit('0')).toBe(0);
+  });
+});
+
 describe('random helpers', () => {
+  it('picks an item from a non-empty list', () => {
+    expect(pick(['a', 'b', 'c'], sequenceRandom([2]))).toBe('c');
+    expect(pick(['a'], sequenceRandom([0]))).toBe('a');
+  });
+
   it('picks characters from the alphabet', () => {
     expect(randomFrom('ab', 3, sequenceRandom([1, 0, 1]))).toBe('bab');
     expect(randomDigits(4, sequenceRandom([1, 2, 3, 13]))).toBe('1233');

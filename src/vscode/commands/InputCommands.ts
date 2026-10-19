@@ -1,5 +1,7 @@
 import type { TextInspector } from '../../application/inspection/TextInspector';
 import type { TokenScanner } from '../../application/scanning/TokenScanner';
+import { summarizeCandidates } from '../../presentation/candidateSummary';
+import type { CandidateSummary } from '../../presentation/candidateSummary';
 import type { InspectionRenderer } from '../../presentation/InspectionRenderer';
 import type { IClipboard, IEditorProvider, IInputPrompt, INotifier, InputFeedback } from '../types';
 import { firstSelection, pixAtCursor } from './editorText';
@@ -23,26 +25,32 @@ export class ValidateInputCommand implements ICommand {
   ) {}
 
   async execute(): Promise<void> {
-    const { prompt, editors, inspector, renderer, clipboard, notifier } = this.services;
+    const { prompt, editors, clipboard, notifier } = this.services;
     const text = await prompt.ask({
       title: COMMAND_MESSAGES.validateTitle,
       placeholder: COMMAND_MESSAGES.validatePlaceholder,
       value: firstSelection(editors.active()) ?? '',
       feedback: (value) => this.feedback(value),
     });
-    const inspection = text === undefined ? undefined : inspector.inspectDocument(text.trim());
-    if (text === undefined || text.trim() === '') {
+    const trimmed = text?.trim() ?? '';
+    if (trimmed === '') {
       return;
     }
-    if (!inspection) {
-      notifier.warn(COMMAND_MESSAGES.notADocument(text.trim()));
+    const summary = this.summarize(trimmed);
+    if (summary.valid === undefined) {
+      notifier.warn(COMMAND_MESSAGES.notADocument(trimmed));
       return;
     }
-    const choice = await notifier.info(renderer.summarize(inspection), COMMAND_MESSAGES.copyFormatted);
-    if (choice === COMMAND_MESSAGES.copyFormatted) {
-      await clipboard.writeText(inspection.formatted);
-      notifier.status(COMMAND_MESSAGES.formattedCopied(inspection.formatted));
+    const { formatted } = summary;
+    const choice = await notifier.info(summary.message, ...(formatted === undefined ? [] : [COMMAND_MESSAGES.copyFormatted]));
+    if (choice === COMMAND_MESSAGES.copyFormatted && formatted !== undefined) {
+      await clipboard.writeText(formatted);
+      notifier.status(COMMAND_MESSAGES.formattedCopied(formatted));
     }
+  }
+
+  private summarize(text: string): CandidateSummary {
+    return summarizeCandidates(this.services.inspector.inspectCandidates(text), this.services.renderer);
   }
 
   private feedback(value: string): InputFeedback | undefined {
@@ -50,11 +58,8 @@ export class ValidateInputCommand implements ICommand {
     if (text === '') {
       return undefined;
     }
-    const inspection = this.services.inspector.inspectDocument(text);
-    if (!inspection) {
-      return { valid: false, message: COMMAND_MESSAGES.notADocumentShort };
-    }
-    return { valid: inspection.validation.valid, message: this.services.renderer.summarize(inspection) };
+    const { valid, message } = this.summarize(text);
+    return { valid: valid === true, message };
   }
 }
 

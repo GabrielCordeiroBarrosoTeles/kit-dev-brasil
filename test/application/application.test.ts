@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { decodeTestBoleto } from '../fakes/boleto';
 import { DocumentGenerator } from '../../src/application/generation/DocumentGenerator';
 import { TextInspector } from '../../src/application/inspection/TextInspector';
 import { TokenScanner } from '../../src/application/scanning/TokenScanner';
@@ -31,6 +32,16 @@ describe('TokenScanner', () => {
     expect(scanner.findAt(`x ${VALID_CPF_DIGITS} y`, 2)).toMatchObject({ masked: false, text: VALID_CPF_DIGITS, start: 2, end: 13 });
   });
 
+  it('finds boletos and the other masked documents', () => {
+    const line = `boleto = "00191.23454 67890.123457 67890.123457 1 96360000123400"`;
+    expect(scanner.findAt(line, 15)).toMatchObject({ kind: 'boleto', masked: true });
+    expect(scanner.findAt('84670000001-7 43590024020-9 02405000243-5 84221010811-9', 3)).toMatchObject({ kind: 'boleto', masked: true });
+    expect(scanner.findAt('846700000017435900240209024050002435842210108119', 3)).toMatchObject({ kind: 'boleto', masked: false });
+    for (const text of ['600.20666.26-1', '60.020.666-X', '4111 1111 1111 1111', '3782 822463 10005', '100 2066 6266 0005', '6002 0666 0914', 'ABC-1234', 'ABC1C34']) {
+      expect(scanner.findAt(`x ${text} y`, 3), text).toMatchObject({ kind: 'document', masked: true, text });
+    }
+  });
+
   it('ignores text away from the cursor or embedded in longer words', () => {
     expect(scanner.findAt(`${VALID_CPF_DIGITS} and more`, 15)).toBeUndefined();
     expect(scanner.findAt(`a${VALID_CPF_DIGITS}`, 3)).toBeUndefined();
@@ -40,7 +51,14 @@ describe('TokenScanner', () => {
 });
 
 describe('TextInspector', () => {
-  const inspector = new TextInspector(documents, decodeBrCode);
+  const inspector = new TextInspector(documents, decodeBrCode, decodeTestBoleto);
+
+  it('inspects boleto tokens and hides nothing about them', () => {
+    const token = { kind: 'boleto' as const, masked: false, text: '846700000017435900240209024050002435842210108119', start: 0, end: 1 };
+    const inspection = inspector.inspect(token);
+    expect(inspection).toMatchObject({ kind: 'boleto', decoding: { issues: [] } });
+    expect(inspection && inspector.shouldDisplay(token, inspection)).toBe(true);
+  });
 
   it('inspects PIX tokens and documents', () => {
     const pix = inspector.inspect({ kind: 'pix', masked: false, text: BCB_PIX, start: 0, end: 1 });

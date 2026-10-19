@@ -1,12 +1,14 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HostToSidebarMessage, SidebarToHostMessage } from '../../src/shared/sidebarProtocol';
-import { SIDEBAR_GENERATORS } from '../../src/shared/sidebarProtocol';
+import { GENERATOR_GROUPS } from '../../src/shared/generatorCatalog';
+import { emptyGenerated } from '../fakes/generators';
 import { renderSidebarHtml } from '../../src/vscode/sidebar/sidebarHtml';
 import { DocumentValidator, INPUT_DEBOUNCE_MS } from '../../src/webview/DocumentValidator';
 import { createElement, debounce, queryElement } from '../../src/webview/dom';
 import { GeneratorList } from '../../src/webview/GeneratorList';
-import { PixInspector } from '../../src/webview/PixInspector';
+import { InspectorSection } from '../../src/webview/InspectorSection';
+import { PixGeneratorForm } from '../../src/webview/PixGeneratorForm';
 
 const loadMarkup = () => {
   const html = renderSidebarHtml({ cspSource: 's', scriptUri: 'x.js', styleUri: 'x.css', nonce: 'n' });
@@ -46,26 +48,28 @@ describe('dom helpers', () => {
 describe('GeneratorList', () => {
   const setup = () => {
     const posted: SidebarToHostMessage[] = [];
-    const list = new GeneratorList(element('#generators'), element('#formatted'), SIDEBAR_GENERATORS, (message) => posted.push(message));
+    const list = new GeneratorList(element('#generators'), element('#formatted'), GENERATOR_GROUPS, (message) => posted.push(message));
     return { posted, list };
   };
 
   it('renders a row per generator with copy and regenerate buttons', () => {
     const { posted } = setup();
-    expect([...document.querySelectorAll('.generator__label')].map((label) => label.textContent)).toEqual(['CPF', 'CNPJ', 'CNPJ alfanumérico']);
+    expect([...document.querySelectorAll('.generator-group__title')].map((title) => title.textContent)).toEqual(['Pessoa', 'Empresa', 'Veículo', 'Cartão de crédito']);
+    expect([...document.querySelectorAll<HTMLDetailsElement>('.generator-group')].map((group) => group.open)).toEqual([true, false, false, false]);
+    expect(document.querySelectorAll('.generator__label')).toHaveLength(16);
     element<HTMLButtonElement>('[aria-label="Gerar outro CPF"]').click();
     element<HTMLButtonElement>('[aria-label="Copiar CNPJ"]').click();
     document.querySelectorAll<HTMLElement>('.generator__value')[2]?.click();
     expect(posted).toEqual([
       { type: 'generate', id: 'cpf' },
       { type: 'copy-generated', id: 'cnpj' },
-      { type: 'copy-generated', id: 'alphanumericCnpj' },
+      { type: 'copy-generated', id: 'cnh' },
     ]);
   });
 
   it('shows generated values and the mask preference', () => {
     const { list, posted } = setup();
-    list.render({ generated: { cpf: '529.982.247-25', cnpj: undefined, alphanumericCnpj: undefined }, formatted: false });
+    list.render({ generated: emptyGenerated({ cpf: '529.982.247-25' }), formatted: false });
     const [cpf, cnpj] = document.querySelectorAll<HTMLElement>('.generator__value');
     expect(cpf?.textContent).toBe('529.982.247-25');
     expect(cpf?.classList.contains('generator__value--empty')).toBe(false);
@@ -112,25 +116,28 @@ describe('DocumentValidator', () => {
   });
 });
 
-describe('PixInspector', () => {
+describe('InspectorSection', () => {
   const setup = () => {
     const posted: SidebarToHostMessage[] = [];
-    const inspector = new PixInspector(
+    const inspector = new InspectorSection(
       {
         input: element('#pix-input'),
         summary: element('#pix-summary'),
         fields: element('#pix-fields'),
         issues: element('#pix-issues'),
         actions: element('#pix-actions'),
-        openReport: element('#open-pix-report'),
-        copyJson: element('#copy-pix-json'),
       },
+      (text) => ({ type: 'inspect-pix', text }),
+      [
+        { button: element('#open-pix-report'), message: (text) => ({ type: 'open-pix-report', text }) },
+        { button: element('#copy-pix-json'), message: (text) => ({ type: 'copy-pix-json', text }) },
+      ],
       (message) => posted.push(message),
     );
     return { posted, inspector };
   };
 
-  it('inspects pasted codes and forwards the actions', () => {
+  it('inspects pasted text and forwards the actions', () => {
     const { posted } = setup();
     type(element('#pix-input'), '000201');
     vi.advanceTimersByTime(INPUT_DEBOUNCE_MS);
@@ -157,6 +164,57 @@ describe('PixInspector', () => {
   });
 });
 
+describe('PixGeneratorForm', () => {
+  const setup = () => {
+    const posted: SidebarToHostMessage[] = [];
+    const form = new PixGeneratorForm(
+      {
+        key: element('#pix-form-key'),
+        name: element('#pix-form-name'),
+        city: element('#pix-form-city'),
+        amount: element('#pix-form-amount'),
+        txid: element('#pix-form-txid'),
+        generate: element('#generate-pix'),
+        issues: element('#pix-form-issues'),
+        result: element('#pix-generated'),
+        qr: element('#pix-qr'),
+        code: element('#pix-code'),
+        copy: element('#copy-pix-code'),
+      },
+      (message) => posted.push(message),
+    );
+    return { posted, form };
+  };
+
+  it('sends the form and copies the generated code', () => {
+    const { posted, form } = setup();
+    element<HTMLInputElement>('#pix-form-key').value = 'a@b.co';
+    element<HTMLInputElement>('#pix-form-name').value = 'FULANO';
+    element<HTMLInputElement>('#pix-form-city').value = 'RECIFE';
+    element<HTMLInputElement>('#pix-form-amount').value = '10,50';
+    element<HTMLInputElement>('#pix-form-txid').value = 'T1';
+    element<HTMLButtonElement>('#generate-pix').click();
+    form.render({ code: '000201CODE', qrDataUrl: 'data:image/svg+xml;base64,AA', issues: [] });
+    element<HTMLButtonElement>('#copy-pix-code').click();
+    expect(posted).toEqual([
+      { type: 'generate-pix', form: { key: 'a@b.co', merchantName: 'FULANO', merchantCity: 'RECIFE', amount: '10,50', txid: 'T1' } },
+      { type: 'copy-text', text: '000201CODE' },
+    ]);
+    expect(element<HTMLElement>('#pix-generated').hidden).toBe(false);
+    expect(element<HTMLImageElement>('#pix-qr').getAttribute('src')).toBe('data:image/svg+xml;base64,AA');
+  });
+
+  it('shows form issues and hides the result', () => {
+    const { form } = setup();
+    form.render({ code: undefined, qrDataUrl: undefined, issues: ['Chave: obrigatório'] });
+    expect(element<HTMLElement>('#pix-form-issues').textContent).toBe('Chave: obrigatório');
+    expect(element<HTMLElement>('#pix-generated').hidden).toBe(true);
+    expect(element<HTMLTextAreaElement>('#pix-code').value).toBe('');
+    form.render({ code: 'x', qrDataUrl: 'data:,', issues: [] });
+    expect(element<HTMLElement>('#pix-form-issues').hidden).toBe(true);
+  });
+});
+
 describe('main', () => {
   it('wires every component to the host', async () => {
     const posted: SidebarToHostMessage[] = [];
@@ -165,9 +223,31 @@ describe('main', () => {
     await import('../../src/webview/main');
     expect(posted).toEqual([{ type: 'ready' }]);
     const deliver = (message: HostToSidebarMessage) => window.dispatchEvent(new MessageEvent('message', { data: message }));
-    deliver({ type: 'state', state: { generated: { cpf: '529.982.247-25', cnpj: undefined, alphanumericCnpj: undefined }, formatted: true } });
+    deliver({ type: 'state', state: { generated: emptyGenerated({ cpf: '529.982.247-25' }), formatted: true } });
     deliver({ type: 'document-result', view: { state: 'valid', message: 'ok', formatted: 'x' } });
     deliver({ type: 'pix-result', view: { state: 'valid', summary: 'PIX válido', fields: [], issues: [] } });
+    deliver({ type: 'boleto-result', view: { state: 'valid', summary: 'Boleto válido', fields: [], issues: [] } });
+    deliver({ type: 'pix-generated', view: { code: 'CODE', qrDataUrl: 'data:,', issues: [] } });
+    expect(element<HTMLElement>('#boleto-summary').textContent).toBe('✅ Boleto válido');
+    expect(element<HTMLTextAreaElement>('#pix-code').value).toBe('CODE');
+    element<HTMLButtonElement>('#open-pix-report').click();
+    element<HTMLButtonElement>('#copy-pix-json').click();
+    expect(posted.slice(-2)).toEqual([
+      { type: 'open-pix-report', text: '' },
+      { type: 'copy-pix-json', text: '' },
+    ]);
+    type(element('#pix-input'), '000201');
+    vi.advanceTimersByTime(INPUT_DEBOUNCE_MS);
+    expect(posted.at(-1)).toEqual({ type: 'inspect-pix', text: '000201' });
+    type(element('#boleto-input'), '8467');
+    vi.advanceTimersByTime(INPUT_DEBOUNCE_MS);
+    element<HTMLButtonElement>('#copy-boleto-line').click();
+    element<HTMLButtonElement>('#copy-boleto-barcode').click();
+    expect(posted.slice(-3)).toEqual([
+      { type: 'inspect-boleto', text: '8467' },
+      { type: 'copy-boleto', text: '8467', format: 'line' },
+      { type: 'copy-boleto', text: '8467', format: 'barcode' },
+    ]);
     expect(document.querySelector('.generator__value')?.textContent).toBe('529.982.247-25');
     expect(element<HTMLElement>('#document-result').textContent).toBe('✅ ok');
     expect(element<HTMLElement>('#pix-summary').textContent).toBe('✅ PIX válido');

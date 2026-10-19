@@ -3,10 +3,14 @@ import * as vscode from 'vscode';
 import type { GeneratedValues } from '../../application/generation/GeneratedValues';
 import type { GeneratorId } from '../../application/generation/generatorIds';
 import { GENERATOR_IDS, isGeneratorId } from '../../application/generation/generatorIds';
-import type { BrCodeDecoder, TextInspector } from '../../application/inspection/TextInspector';
+import type { BoletoDecoder, BrCodeDecoder, TextInspector } from '../../application/inspection/TextInspector';
+import { generateStaticPix } from '../../application/pix/generateStaticPix';
+import type { PixForm } from '../../application/pix/generateStaticPix';
+import { describePixFormIssue } from '../../presentation/messages';
 import type { InspectionRenderer } from '../../presentation/InspectionRenderer';
-import { EMPTY_DOCUMENT_VIEW, EMPTY_PIX_VIEW, toDocumentView, toPixView } from '../../presentation/sidebarViews';
-import type { HostToSidebarMessage, SidebarState, SidebarToHostMessage } from '../../shared/sidebarProtocol';
+import { summarizeCandidates } from '../../presentation/candidateSummary';
+import { EMPTY_DOCUMENT_VIEW, EMPTY_INSPECTION_VIEW, toBoletoView, toDocumentView, toPixView } from '../../presentation/sidebarViews';
+import type { BoletoFormatChoice, HostToSidebarMessage, SidebarState, SidebarToHostMessage } from '../../shared/sidebarProtocol';
 import type { ICommand } from '../commands/types';
 import { COMMAND_MESSAGES } from '../commands/messages';
 import type { PixReport } from '../commands/PixReport';
@@ -19,6 +23,8 @@ export interface SidebarServices {
   readonly inspector: TextInspector;
   readonly renderer: InspectionRenderer;
   readonly decode: BrCodeDecoder;
+  readonly decodeBoleto: BoletoDecoder;
+  readonly qrCode: (text: string) => string;
   readonly report: PixReport;
   readonly clipboard: IClipboard;
   readonly notifier: INotifier;
@@ -40,12 +46,31 @@ const MESSAGE_TYPES: ReadonlySet<string> = new Set<SidebarToHostMessage['type']>
   'inspect-pix',
   'open-pix-report',
   'copy-pix-json',
+  'inspect-boleto',
+  'copy-boleto',
+  'generate-pix',
+  'copy-text',
   'format-selection',
   'unformat-selection',
 ]);
 
 const isSidebarMessage = (value: unknown): value is SidebarToHostMessage =>
   typeof value === 'object' && value !== null && MESSAGE_TYPES.has(String((value as { type?: unknown }).type));
+
+const MAX_COPY_LENGTH = 2000;
+
+const field = (form: unknown, name: keyof PixForm): string => {
+  const value = typeof form === 'object' && form !== null ? (form as Record<string, unknown>)[name] : undefined;
+  return typeof value === 'string' ? value : '';
+};
+
+const toPixForm = (form: unknown): PixForm => ({
+  key: field(form, 'key'),
+  merchantName: field(form, 'merchantName'),
+  merchantCity: field(form, 'merchantCity'),
+  amount: field(form, 'amount'),
+  txid: field(form, 'txid'),
+});
 
 const createNonce = (): string => randomBytes(16).toString('base64');
 
@@ -63,6 +88,10 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
     'inspect-pix': ({ text }) => this.inspectPix(text),
     'open-pix-report': ({ text }) => this.services.report.present(text.trim()),
     'copy-pix-json': ({ text }) => this.copyPixJson(text),
+    'inspect-boleto': ({ text }) => this.inspectBoleto(text),
+    'copy-boleto': ({ text, format }) => this.copyBoleto(text, format),
+    'generate-pix': ({ form }) => this.generatePix(form),
+    'copy-text': ({ text }) => this.copyText(text),
     'format-selection': () => this.services.formatSelection.execute(),
     'unformat-selection': () => this.services.unformatSelection.execute(),
   };
@@ -131,22 +160,49 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
 
   private validate(text: string): void {
     const trimmed = String(text).trim();
-    const view = trimmed === '' ? EMPTY_DOCUMENT_VIEW : toDocumentView(this.services.inspector.inspectDocument(trimmed), this.services.renderer);
+    const view = trimmed === '' ? EMPTY_DOCUMENT_VIEW : toDocumentView(this.services.inspector.inspectCandidates(trimmed), this.services.renderer);
     this.post({ type: 'document-result', view });
   }
 
   private async copyFormatted(text: string): Promise<void> {
-    const inspection = this.services.inspector.inspectDocument(String(text).trim());
-    if (inspection) {
-      await this.services.clipboard.writeText(inspection.formatted);
-      this.services.notifier.status(COMMAND_MESSAGES.formattedCopied(inspection.formatted));
+    const { formatted } = summarizeCandidates(this.services.inspector.inspectCandidates(String(text).trim()), this.services.renderer);
+    if (formatted !== undefined) {
+      await this.services.clipboard.writeText(formatted);
+      this.services.notifier.status(COMMAND_MESSAGES.formattedCopied(formatted));
     }
   }
 
   private inspectPix(text: string): void {
     const trimmed = String(text).trim();
-    const view = trimmed === '' ? EMPTY_PIX_VIEW : toPixView(this.services.decode(trimmed), this.services.renderer);
+    const view = trimmed === '' ? EMPTY_INSPECTION_VIEW : toPixView(this.services.decode(trimmed), this.services.renderer);
     this.post({ type: 'pix-result', view });
+  }
+
+  private inspectBoleto(text: string): void {
+    const trimmed = String(text).trim();
+    const view = trimmed === '' ? EMPTY_INSPECTION_VIEW : toBoletoView(this.services.decodeBoleto(trimmed), this.services.renderer);
+    this.post({ type: 'boleto-result', view });
+  }
+
+  private async copyBoleto(text: string, format: BoletoFormatChoice): Promise<void> {
+    const { boleto } = this.services.decodeBoleto(String(text).trim());
+    if (boleto) {
+      await this.services.clipboard.writeText(format === 'barcode' ? boleto.barcode : boleto.line);
+      this.services.notifier.status(COMMAND_MESSAGES.boletoCopied(format === 'barcode' ? 'barcode' : 'line'));
+    }
+  }
+
+  private generatePix(form: PixForm): void {
+    const { code, issues } = generateStaticPix(toPixForm(form));
+    const view = { code, qrDataUrl: code === undefined ? undefined : this.services.qrCode(code), issues: issues.map(describePixFormIssue) };
+    this.post({ type: 'pix-generated', view });
+  }
+
+  private async copyText(text: string): Promise<void> {
+    if (typeof text === 'string' && text !== '' && text.length <= MAX_COPY_LENGTH) {
+      await this.services.clipboard.writeText(text);
+      this.services.notifier.status(COMMAND_MESSAGES.textCopied);
+    }
   }
 
   private async copyPixJson(text: string): Promise<void> {

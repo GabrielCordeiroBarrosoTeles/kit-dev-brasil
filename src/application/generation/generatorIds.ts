@@ -1,4 +1,21 @@
-export const GENERATOR_IDS = ['cpf', 'cnpj', 'alphanumericCnpj'] as const;
+export const GENERATOR_IDS = [
+  'cpf',
+  'rg',
+  'cnh',
+  'voterTitle',
+  'pis',
+  'cns',
+  'cnpj',
+  'alphanumericCnpj',
+  'licensePlate',
+  'oldLicensePlate',
+  'renavam',
+  'cardVisa',
+  'cardMastercard',
+  'cardAmex',
+  'cardElo',
+  'cardHipercard',
+] as const;
 
 export type GeneratorId = (typeof GENERATOR_IDS)[number];
 

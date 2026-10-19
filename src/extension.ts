@@ -1,15 +1,17 @@
 import * as vscode from 'vscode';
+import { createDocumentCatalog } from './application/catalog';
 import { DocumentGenerator } from './application/generation/DocumentGenerator';
 import { GeneratedValues } from './application/generation/GeneratedValues';
 import type { GeneratorId } from './application/generation/generatorIds';
 import { TextInspector } from './application/inspection/TextInspector';
 import { TokenScanner } from './application/scanning/TokenScanner';
 import { TextTransformer } from './application/transform/TextTransformer';
-import { Cnpj } from './domain/documents/Cnpj';
-import { Cpf } from './domain/documents/Cpf';
 import { DocumentRegistry } from './domain/documents/DocumentRegistry';
+import { convertBoleto } from './domain/boleto/convertBoleto';
+import { decodeBoleto } from './domain/boleto/decodeBoleto';
 import { decodeBrCode } from './domain/pix/decodeBrCode';
 import { CryptoRandomSource } from './infrastructure/CryptoRandomSource';
+import { qrCodeDataUrl } from './infrastructure/qrCode';
 import { InspectionRenderer } from './presentation/InspectionRenderer';
 import { COMMAND_IDS } from './vscode/commands/commandIds';
 import { GenerateDocumentCommand } from './vscode/commands/GenerateDocumentCommand';
@@ -21,7 +23,9 @@ import { registerCommands } from './vscode/commands/registerCommands';
 import { TransformSelectionCommand } from './vscode/commands/TransformSelectionCommand';
 import { ValidateSelectionCommand } from './vscode/commands/ValidateSelectionCommand';
 import { KitHoverProvider } from './vscode/KitHoverProvider';
-import { VsCodeClipboard, VsCodeInputPrompt, VsCodeMarkdownPresenter, VsCodeNotifier, VsCodeSettings } from './vscode/services';
+import { GENERATOR_GROUPS } from './shared/generatorCatalog';
+import { PickGeneratorCommand } from './vscode/commands/PickGeneratorCommand';
+import { VsCodeClipboard, VsCodeInputPrompt, VsCodeMarkdownPresenter, VsCodeNotifier, VsCodeQuickPick, VsCodeSettings } from './vscode/services';
 import { SidebarViewProvider } from './vscode/sidebar/SidebarViewProvider';
 import { ActiveEditorProvider } from './vscode/VsCodeEditor';
 
@@ -29,12 +33,12 @@ const HOVER_SELECTOR: vscode.DocumentSelector = [{ scheme: 'file' }, { scheme: '
 const SIDEBAR_VIEW_ID = 'kitDevBrasil.tools';
 
 export function activate(context: vscode.ExtensionContext): void {
-  const cpf = new Cpf();
-  const cnpj = new Cnpj();
-  const documents = new DocumentRegistry([cpf, cnpj]);
+  const catalog = createDocumentCatalog();
+  const documents = new DocumentRegistry(catalog.types);
   const scanner = new TokenScanner();
-  const inspector = new TextInspector(documents, decodeBrCode);
-  const renderer = new InspectionRenderer();
+  const today = (): Date => new Date();
+  const inspector = new TextInspector(documents, decodeBrCode, (text) => decodeBoleto(text, today()));
+  const renderer = new InspectionRenderer(today);
   const transformer = new TextTransformer(documents);
   const settings = new VsCodeSettings();
   const editors = new ActiveEditorProvider();
@@ -42,14 +46,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const clipboard = new VsCodeClipboard();
   const prompt = new VsCodeInputPrompt();
   const report = new PixReport({ decode: decodeBrCode, renderer, presenter: new VsCodeMarkdownPresenter(), clipboard, notifier });
-  const generator = new DocumentGenerator<GeneratorId>(
-    {
-      cpf: { label: 'CPF', type: cpf, generate: (random) => cpf.generate(random) },
-      cnpj: { label: 'CNPJ', type: cnpj, generate: (random) => cnpj.generate(random) },
-      alphanumericCnpj: { label: 'CNPJ alfanumérico', type: cnpj, generate: (random) => cnpj.generateAlphanumeric(random) },
-    },
-    new CryptoRandomSource(),
-  );
+  const generator = new DocumentGenerator<GeneratorId>(catalog.generators, new CryptoRandomSource());
 
   const formatSelection = new TransformSelectionCommand(
     COMMAND_IDS.formatSelection,
@@ -65,12 +62,16 @@ export function activate(context: vscode.ExtensionContext): void {
     editors,
     notifier,
   );
+  const generateCommand = (commandId: string, generatorId: GeneratorId) =>
+    new GenerateDocumentCommand(commandId, generatorId, generator, settings, clipboard, editors, notifier);
   const commands = [
-    new GenerateDocumentCommand(COMMAND_IDS.generateCpf, 'cpf', generator, settings, clipboard, editors, notifier),
-    new GenerateDocumentCommand(COMMAND_IDS.generateCnpj, 'cnpj', generator, settings, clipboard, editors, notifier),
-    new GenerateDocumentCommand(COMMAND_IDS.generateAlphanumericCnpj, 'alphanumericCnpj', generator, settings, clipboard, editors, notifier),
+    generateCommand(COMMAND_IDS.generateCpf, 'cpf'),
+    generateCommand(COMMAND_IDS.generateCnpj, 'cnpj'),
+    generateCommand(COMMAND_IDS.generateAlphanumericCnpj, 'alphanumericCnpj'),
+    new PickGeneratorCommand(COMMAND_IDS.generateDocument, new VsCodeQuickPick(), GENERATOR_GROUPS, (id) => generateCommand(COMMAND_IDS.generateDocument, id).execute()),
     formatSelection,
     unformatSelection,
+    new TransformSelectionCommand(COMMAND_IDS.convertBoleto, (text) => convertBoleto(text, today()), COMMAND_MESSAGES.nothingToConvert, editors, notifier),
     new ValidateSelectionCommand(COMMAND_IDS.validateSelection, inspector, renderer, editors, notifier),
     new InspectPixCommand(COMMAND_IDS.inspectPix, scanner, report, editors, notifier),
     new ValidateInputCommand(COMMAND_IDS.validateInput, { inspector, renderer, prompt, editors, clipboard, notifier }),
@@ -83,6 +84,8 @@ export function activate(context: vscode.ExtensionContext): void {
     inspector,
     renderer,
     decode: decodeBrCode,
+    decodeBoleto: (text) => decodeBoleto(text, today()),
+    qrCode: qrCodeDataUrl,
     report,
     clipboard,
     notifier,

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import type { IClipboard, IInputPrompt, IMarkdownPresenter, INotifier, InputFeedback, InputRequest, ISettings } from './types';
+import type { IClipboard, IInputPrompt, IMarkdownPresenter, INotifier, InputFeedback, InputRequest, IQuickPick, ISettings, PickEntry } from './types';
 
 export const CONFIGURATION_SECTION = 'kitDevBrasil';
 
@@ -67,5 +67,19 @@ export class VsCodeInputPrompt implements IInputPrompt {
         return result && toValidationMessage(result);
       },
     });
+  }
+}
+
+interface ValuedItem<T> extends vscode.QuickPickItem {
+  readonly value?: T;
+}
+
+const toQuickPickItem = <T>(entry: PickEntry<T>): ValuedItem<T> =>
+  'separator' in entry ? { label: entry.separator, kind: vscode.QuickPickItemKind.Separator } : { label: entry.label, value: entry.value };
+
+export class VsCodeQuickPick implements IQuickPick {
+  async pick<T>(entries: readonly PickEntry<T>[], placeholder: string): Promise<T | undefined> {
+    const choice = await vscode.window.showQuickPick(entries.map(toQuickPickItem), { placeHolder: placeholder, matchOnDescription: true });
+    return choice?.value;
   }
 }

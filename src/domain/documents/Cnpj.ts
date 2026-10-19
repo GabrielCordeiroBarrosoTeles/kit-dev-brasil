@@ -26,6 +26,10 @@ export class Cnpj implements DocumentType {
     return IDENTIFIABLE.test(text.trim());
   }
 
+  accepts(text: string): boolean {
+    return ALLOWED.test(text) && SHAPE.test(this.normalize(text));
+  }
+
   validate(text: string): DocumentValidation {
     if (!ALLOWED.test(text)) {
       return invalid({ code: 'invalid-characters' });

@@ -50,12 +50,29 @@ h2 {
 
 .generators {
   display: grid;
+  gap: 6px;
+}
+
+.generator-group {
+  display: grid;
   gap: 4px;
+}
+
+.generator-group[open] {
+  padding-bottom: 4px;
+}
+
+.generator-group__title {
+  cursor: pointer;
+  color: var(--vscode-descriptionForeground);
+  font-weight: 600;
+  user-select: none;
 }
 
 .generator {
   display: grid;
-  grid-template-columns: minmax(64px, auto) 1fr auto auto;
+  grid-template-columns: minmax(92px, auto) 1fr auto auto;
+  padding-left: 12px;
   align-items: center;
   gap: 6px;
   min-height: 24px;
@@ -198,4 +215,30 @@ h2 {
 
 .button--secondary:hover {
   background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.form {
+  display: grid;
+  gap: 6px;
+}
+
+.form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.generated {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  justify-items: center;
+}
+
+.qr {
+  width: min(200px, 100%);
+  padding: 8px;
+  border-radius: 6px;
+  background: #ffffff;
+  image-rendering: pixelated;
 }

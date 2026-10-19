@@ -27,6 +27,7 @@ const document = (overrides: Partial<DocumentInspection> = {}): DocumentInspecti
   document: 'cpf',
   label: 'CPF',
   formatted: '529.982.247-25',
+  details: undefined,
   validation: { valid: true },
   ...overrides,
 });
@@ -44,6 +45,9 @@ describe('messages', () => {
     [{ code: 'invalid-characters' } as const, 'tem caracteres que não pertencem ao documento'],
     [{ code: 'wrong-length', expected: 11, actual: 9 } as const, 'deveria ter 11 caracteres, mas tem 9'],
     [{ code: 'repeated-characters' } as const, 'todos os caracteres são iguais'],
+    [{ code: 'invalid-format', expected: 'ABC-1234' } as const, 'não segue o formato esperado: ABC-1234'],
+    [{ code: 'invalid-prefix' } as const, 'começa com um dígito que não existe nesse documento'],
+    [{ code: 'invalid-checksum' } as const, 'a conta de verificação não fecha'],
     [{ code: 'invalid-check-digits', expected: '25', actual: '26' } as const, 'dígitos verificadores errados: esperado 25, encontrado 26'],
   ])('describes document issue %j', (issue, text) => {
     expect(describeDocumentIssue(issue)).toBe(text);

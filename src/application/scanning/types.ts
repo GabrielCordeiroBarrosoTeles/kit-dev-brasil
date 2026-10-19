@@ -1,4 +1,4 @@
-export type TokenKind = 'pix' | 'document';
+export type TokenKind = 'pix' | 'boleto' | 'document';
 
 export interface Token {
   readonly kind: TokenKind;

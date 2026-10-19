@@ -8,6 +8,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Novos documentos: RG (SP), CNH, título de eleitor, PIS/PASEP/NIT, Cartão do SUS (CNS), placa (antiga e Mercosul, com conversão), RENAVAM e cartão de crédito (Visa, Mastercard, American Express, Elo e Hipercard), com geração e validação.
+- Validação de qualquer documento, com detecção automática do tipo e de números que servem para mais de um documento.
+- Boleto bancário e de arrecadação: leitura da linha digitável e do código de barras (banco, valor, vencimento com o novo ciclo de 2025), validação campo a campo, cópia e conversão entre os formatos.
+- Geração de PIX de teste com QR code no painel.
+- Comando **Gerar documento…** com todos os geradores e comando **Converter boleto**.
+- Hover para boleto e para os novos documentos escritos com máscara.
+
 - Ícone na barra lateral com o painel **Ferramentas**, feito com as cores do tema: geradores de CPF e CNPJ com o número no painel e botões de copiar e gerar outro, campo para validar CPF ou CNPJ e campo para inspecionar PIX, ambos com resultado ao vivo, e ações para formatar ou remover a máscara da seleção.
 - Comandos **Validar CPF ou CNPJ (colar)** e **Inspecionar PIX (colar código)** na paleta, com resultado ao vivo enquanto se digita.
 - Pela paleta, gerar sem arquivo aberto copia o número para a área de transferência.

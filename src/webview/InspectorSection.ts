@@ -1,30 +1,36 @@
-import type { PixView } from '../shared/sidebarProtocol';
+import type { InspectionView, SidebarToHostMessage } from '../shared/sidebarProtocol';
 import { createElement, debounce, resultText } from './dom';
 import { INPUT_DEBOUNCE_MS } from './DocumentValidator';
 import type { PostMessage } from './types';
 
-export interface PixInspectorElements {
+export interface InspectorSectionElements {
   readonly input: HTMLTextAreaElement;
   readonly summary: HTMLElement;
   readonly fields: HTMLElement;
   readonly issues: HTMLElement;
   readonly actions: HTMLElement;
-  readonly openReport: HTMLButtonElement;
-  readonly copyJson: HTMLButtonElement;
 }
 
-export class PixInspector {
+export interface InspectorAction {
+  readonly button: HTMLButtonElement;
+  readonly message: (text: string) => SidebarToHostMessage;
+}
+
+export class InspectorSection {
   constructor(
-    private readonly elements: PixInspectorElements,
+    private readonly elements: InspectorSectionElements,
+    inspect: (text: string) => SidebarToHostMessage,
+    actions: readonly InspectorAction[],
     post: PostMessage,
   ) {
-    const inspect = debounce<string>(INPUT_DEBOUNCE_MS, (text) => post({ type: 'inspect-pix', text }));
-    elements.input.addEventListener('input', () => inspect(elements.input.value));
-    elements.openReport.addEventListener('click', () => post({ type: 'open-pix-report', text: elements.input.value }));
-    elements.copyJson.addEventListener('click', () => post({ type: 'copy-pix-json', text: elements.input.value }));
+    const send = debounce<string>(INPUT_DEBOUNCE_MS, (text) => post(inspect(text)));
+    elements.input.addEventListener('input', () => send(elements.input.value));
+    for (const { button, message } of actions) {
+      button.addEventListener('click', () => post(message(elements.input.value)));
+    }
   }
 
-  render(view: PixView): void {
+  render(view: InspectionView): void {
     const { summary, fields, issues, actions } = this.elements;
     const empty = view.state === 'empty';
     summary.hidden = empty;

@@ -2,10 +2,12 @@ export const COMMAND_IDS = {
   generateCpf: 'kitDevBrasil.generateCpf',
   generateCnpj: 'kitDevBrasil.generateCnpj',
   generateAlphanumericCnpj: 'kitDevBrasil.generateAlphanumericCnpj',
+  generateDocument: 'kitDevBrasil.generateDocument',
   formatSelection: 'kitDevBrasil.formatSelection',
   unformatSelection: 'kitDevBrasil.unformatSelection',
   validateSelection: 'kitDevBrasil.validateSelection',
   inspectPix: 'kitDevBrasil.inspectPix',
+  convertBoleto: 'kitDevBrasil.convertBoleto',
   validateInput: 'kitDevBrasil.validateInput',
   inspectPixInput: 'kitDevBrasil.inspectPixInput',
 } as const;

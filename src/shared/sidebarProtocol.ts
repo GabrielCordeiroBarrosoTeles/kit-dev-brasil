@@ -1,4 +1,5 @@
 import type { GeneratorId } from '../application/generation/generatorIds';
+import type { PixForm } from '../application/pix/generateStaticPix';
 
 export type ResultState = 'empty' | 'valid' | 'invalid' | 'unknown';
 
@@ -10,10 +11,22 @@ export interface DocumentView {
   readonly formatted: string | undefined;
 }
 
-export interface PixView {
+export interface InspectionView {
   readonly state: ResultState;
   readonly summary: string;
   readonly fields: readonly FieldRow[];
+  readonly issues: readonly string[];
+}
+
+export type PixView = InspectionView;
+
+export type BoletoView = InspectionView;
+
+export type BoletoFormatChoice = 'barcode' | 'line';
+
+export interface PixGeneratedView {
+  readonly code: string | undefined;
+  readonly qrDataUrl: string | undefined;
   readonly issues: readonly string[];
 }
 
@@ -22,21 +35,12 @@ export interface SidebarState {
   readonly formatted: boolean;
 }
 
-export interface GeneratorEntry {
-  readonly id: GeneratorId;
-  readonly label: string;
-}
-
-export const SIDEBAR_GENERATORS: readonly GeneratorEntry[] = [
-  { id: 'cpf', label: 'CPF' },
-  { id: 'cnpj', label: 'CNPJ' },
-  { id: 'alphanumericCnpj', label: 'CNPJ alfanumérico' },
-];
-
 export type HostToSidebarMessage =
   | { readonly type: 'state'; readonly state: SidebarState }
   | { readonly type: 'document-result'; readonly view: DocumentView }
-  | { readonly type: 'pix-result'; readonly view: PixView };
+  | { readonly type: 'pix-result'; readonly view: PixView }
+  | { readonly type: 'boleto-result'; readonly view: BoletoView }
+  | { readonly type: 'pix-generated'; readonly view: PixGeneratedView };
 
 export type SidebarToHostMessage =
   | { readonly type: 'ready' }
@@ -48,5 +52,9 @@ export type SidebarToHostMessage =
   | { readonly type: 'inspect-pix'; readonly text: string }
   | { readonly type: 'open-pix-report'; readonly text: string }
   | { readonly type: 'copy-pix-json'; readonly text: string }
+  | { readonly type: 'inspect-boleto'; readonly text: string }
+  | { readonly type: 'generate-pix'; readonly form: PixForm }
+  | { readonly type: 'copy-text'; readonly text: string }
+  | { readonly type: 'copy-boleto'; readonly text: string; readonly format: BoletoFormatChoice }
   | { readonly type: 'format-selection' }
   | { readonly type: 'unformat-selection' };

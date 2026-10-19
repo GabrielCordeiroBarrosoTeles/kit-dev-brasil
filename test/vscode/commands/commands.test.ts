@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { decodeTestBoleto } from '../../fakes/boleto';
 import { DocumentGenerator } from '../../../src/application/generation/DocumentGenerator';
 import { TextInspector } from '../../../src/application/inspection/TextInspector';
 import { TokenScanner } from '../../../src/application/scanning/TokenScanner';
@@ -20,7 +21,7 @@ import { BCB_PIX, VALID_CNPJ, VALID_CPF, VALID_CPF_DIGITS } from '../../fakes/sa
 
 const cpf = new Cpf();
 const documents = new DocumentRegistry([cpf, new Cnpj()]);
-const inspector = new TextInspector(documents, decodeBrCode);
+const inspector = new TextInspector(documents, decodeBrCode, decodeTestBoleto);
 const renderer = new InspectionRenderer();
 const transformer = new TextTransformer(documents);
 
@@ -87,7 +88,7 @@ describe('ValidateSelectionCommand', () => {
   it('summarizes every selection', async () => {
     const notifier = new FakeNotifier();
     await new ValidateSelectionCommand('kit.validate', inspector, renderer, editorProvider(new FakeEditor([VALID_CPF, '', 'abc', VALID_CNPJ])), notifier).execute();
-    expect(notifier.infos).toEqual([`CPF ${VALID_CPF} é válido · "abc" não parece um CPF ou CNPJ. · CNPJ ${VALID_CNPJ} é válido`]);
+    expect(notifier.infos).toEqual([`CPF ${VALID_CPF} é válido · "abc" não parece um documento conhecido. · CNPJ ${VALID_CNPJ} é válido`]);
   });
 
   it('needs a selection', async () => {
@@ -124,6 +125,6 @@ describe('InspectPixCommand', () => {
 
 describe('messages', () => {
   it('quotes the text that is not a document', () => {
-    expect(COMMAND_MESSAGES.notADocument('x')).toBe('"x" não parece um CPF ou CNPJ.');
+    expect(COMMAND_MESSAGES.notADocument('x')).toBe('"x" não parece um documento conhecido.');
   });
 });

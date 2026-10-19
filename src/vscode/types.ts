@@ -48,3 +48,9 @@ export interface InputRequest {
 export interface IInputPrompt {
   ask(request: InputRequest): Promise<string | undefined>;
 }
+
+export type PickEntry<T> = { readonly separator: string } | { readonly label: string; readonly value: T };
+
+export interface IQuickPick {
+  pick<T>(entries: readonly PickEntry<T>[], placeholder: string): Promise<T | undefined>;
+}

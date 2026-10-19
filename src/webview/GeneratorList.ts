@@ -1,9 +1,12 @@
 import type { GeneratorId } from '../application/generation/generatorIds';
-import type { GeneratorEntry, SidebarState } from '../shared/sidebarProtocol';
+import type { GeneratorGroup } from '../shared/generatorCatalog';
+import { GENERATOR_LABELS } from '../shared/generatorCatalog';
+import type { SidebarState } from '../shared/sidebarProtocol';
 import { createElement } from './dom';
 import type { PostMessage } from './types';
 
 const EMPTY_VALUE = 'clique em ↻ para gerar';
+const OPEN_GROUPS = 1;
 
 export class GeneratorList {
   private readonly values = new Map<GeneratorId, HTMLElement>();
@@ -11,12 +14,10 @@ export class GeneratorList {
   constructor(
     container: HTMLElement,
     private readonly formatted: HTMLInputElement,
-    entries: readonly GeneratorEntry[],
+    groups: readonly GeneratorGroup[],
     private readonly post: PostMessage,
   ) {
-    for (const entry of entries) {
-      container.append(this.createRow(entry));
-    }
+    groups.forEach((group, index) => container.append(this.createGroup(group, index < OPEN_GROUPS)));
     formatted.addEventListener('change', () => post({ type: 'set-formatted', value: formatted.checked }));
   }
 
@@ -29,7 +30,15 @@ export class GeneratorList {
     }
   }
 
-  private createRow({ id, label }: GeneratorEntry): HTMLElement {
+  private createGroup(group: GeneratorGroup, open: boolean): HTMLElement {
+    const details = createElement('details', 'generator-group');
+    details.open = open;
+    details.append(createElement('summary', 'generator-group__title', group.label), ...group.ids.map((id) => this.createRow(id)));
+    return details;
+  }
+
+  private createRow(id: GeneratorId): HTMLElement {
+    const label = GENERATOR_LABELS[id];
     const row = createElement('div', 'generator');
     const value = createElement('span', 'generator__value generator__value--empty', EMPTY_VALUE);
     value.title = 'Clique para copiar';

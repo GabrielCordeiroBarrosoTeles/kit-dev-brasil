@@ -1,4 +1,5 @@
 import type { TextInspector } from '../../application/inspection/TextInspector';
+import { summarizeCandidates } from '../../presentation/candidateSummary';
 import type { InspectionRenderer } from '../../presentation/InspectionRenderer';
 import type { IEditor, IEditorProvider, INotifier } from '../types';
 import { EditorCommand } from './EditorCommand';
@@ -25,7 +26,7 @@ export class ValidateSelectionCommand extends EditorCommand {
   }
 
   private describe(text: string): string {
-    const inspection = this.inspector.inspectDocument(text);
-    return inspection ? this.renderer.summarize(inspection) : COMMAND_MESSAGES.notADocument(text);
+    const summary = summarizeCandidates(this.inspector.inspectCandidates(text), this.renderer);
+    return summary.valid === undefined ? COMMAND_MESSAGES.notADocument(text) : summary.message;
   }
 }

@@ -14,3 +14,20 @@ export const cpfSemMascara = '52998224725';
 export const cnpjValido = '11.222.333/0001-81';
 export const cnpjInvalido = '11.222.333/0001-82';
 export const cnpjAlfanumerico = '12.ABC.345/01DE-35';
+
+export const boletoBancarioDoManualFebraban = '00191.23454 67890.123457 67890.123457 1 96360000123400';
+export const boletoBancarioCodigoDeBarras = '00191963600001234001234567890123456789012345';
+export const boletoDeArrecadacaoTelefone = '84670000001-7 43590024020-9 02405000243-5 84221010811-9';
+export const boletoComDigitoErrado = '00191.23455 67890.123457 67890.123457 1 96360000123400';
+
+export const pisValido = '600.20666.26-1';
+export const rgValido = '60.020.666-X';
+export const cnhValida = '22660684802';
+export const tituloDeEleitor = '6002 0666 0914';
+export const cartaoDoSus = '100 2066 6266 0005';
+export const renavam = '60020666261';
+export const placaAntiga = 'ABC-1234';
+export const placaMercosul = 'ABC1C34';
+export const cartaoVisaDeTeste = '4111 1111 1111 1111';
+export const cartaoAmexDeTeste = '3782 822463 10005';
+export const onzeDigitosAmbiguos = '60020666261';

@@ -1,21 +1,23 @@
 import { describe, expect, it } from 'vitest';
+import { decodeTestBoleto } from '../fakes/boleto';
 import { Cpf } from '../../src/domain/documents/Cpf';
 import { DocumentRegistry } from '../../src/domain/documents/DocumentRegistry';
 import { decodeBrCode } from '../../src/domain/pix/decodeBrCode';
 import { TextInspector } from '../../src/application/inspection/TextInspector';
 import { InspectionRenderer } from '../../src/presentation/InspectionRenderer';
 import { formatAmount } from '../../src/presentation/pixFields';
-import { NOT_A_DOCUMENT, toDocumentView, toPixView } from '../../src/presentation/sidebarViews';
+import { NOT_A_DOCUMENT } from '../../src/presentation/candidateSummary';
+import { toDocumentView, toPixView } from '../../src/presentation/sidebarViews';
 import { BCB_PIX } from '../fakes/samples';
 
 const renderer = new InspectionRenderer();
-const inspector = new TextInspector(new DocumentRegistry([new Cpf()]), decodeBrCode);
+const inspector = new TextInspector(new DocumentRegistry([new Cpf()]), decodeBrCode, decodeTestBoleto);
 
 describe('sidebar views', () => {
   it('describes documents for the sidebar', () => {
-    expect(toDocumentView(undefined, renderer)).toEqual({ state: 'unknown', message: NOT_A_DOCUMENT, formatted: undefined });
-    expect(toDocumentView(inspector.inspectDocument('52998224725'), renderer)).toEqual({ state: 'valid', message: 'CPF 529.982.247-25 é válido', formatted: '529.982.247-25' });
-    expect(toDocumentView(inspector.inspectDocument('52998224726'), renderer)).toMatchObject({ state: 'invalid', formatted: '529.982.247-26' });
+    expect(toDocumentView([], renderer)).toEqual({ state: 'unknown', message: NOT_A_DOCUMENT, formatted: undefined });
+    expect(toDocumentView(inspector.inspectCandidates('52998224725'), renderer)).toEqual({ state: 'valid', message: 'CPF 529.982.247-25 é válido', formatted: '529.982.247-25' });
+    expect(toDocumentView(inspector.inspectCandidates('52998224726'), renderer)).toMatchObject({ state: 'invalid', formatted: '529.982.247-26' });
   });
 
   it('describes PIX codes with plain fields and issues', () => {

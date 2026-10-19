@@ -13,3 +13,13 @@ export const sequenceRandom = (values: readonly number[]): RandomSource & { read
     },
   };
 };
+
+export const lcgRandom = (seed: number): RandomSource => {
+  let state = seed;
+  return {
+    nextInt: (maxExclusive: number) => {
+      state = (state * 1103515245 + 12345) % 2147483648;
+      return state % maxExclusive;
+    },
+  };
+};

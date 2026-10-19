@@ -1,3 +1,5 @@
+import type { PixFormField, PixFormIssue } from '../application/pix/generateStaticPix';
+import type { BoletoIssue } from '../domain/boleto/types';
 import type { DocumentIssue } from '../domain/documents/types';
 import type { BrCodeField, BrCodeIssue, PixInitiation, PixKeyType } from '../domain/pix/types';
 
@@ -36,6 +38,12 @@ export const describeDocumentIssue = (issue: DocumentIssue): string => {
       return `deveria ter ${issue.expected} caracteres, mas tem ${issue.actual}`;
     case 'repeated-characters':
       return 'todos os caracteres são iguais';
+    case 'invalid-format':
+      return `não segue o formato esperado: ${issue.expected}`;
+    case 'invalid-prefix':
+      return 'começa com um dígito que não existe nesse documento';
+    case 'invalid-checksum':
+      return 'a conta de verificação não fecha';
     case 'invalid-check-digits':
       return `dígitos verificadores errados: esperado ${issue.expected}, encontrado ${issue.actual}`;
   }
@@ -55,5 +63,44 @@ export const describeBrCodeIssue = (issue: BrCodeIssue): string => {
       return `valor "${issue.actual}" fora do formato esperado (ex.: 10.50)`;
     case 'invalid-crc':
       return `CRC não confere: esperado ${issue.expected}, encontrado ${issue.actual}`;
+  }
+};
+
+export const describeBoletoIssue = (issue: BoletoIssue): string => {
+  switch (issue.code) {
+    case 'invalid-characters':
+      return 'tem caracteres que não pertencem a um boleto';
+    case 'invalid-length':
+      return `tem ${issue.actual} dígitos; boleto tem 44 (código de barras), 47 (linha bancária) ou 48 (linha de arrecadação)`;
+    case 'invalid-field-check-digit':
+      return `dígito do campo ${issue.field} errado: esperado ${issue.expected}, encontrado ${issue.actual}`;
+    case 'invalid-check-digit':
+      return `dígito verificador geral errado: esperado ${issue.expected}, encontrado ${issue.actual}`;
+    case 'invalid-currency':
+      return `código de moeda ${issue.actual} desconhecido (o real é 9)`;
+    case 'invalid-value-type':
+      return `identificador de valor ${issue.actual} desconhecido (esperado 6, 7, 8 ou 9)`;
+  }
+};
+
+export const PIX_FORM_LABELS: Readonly<Record<PixFormField, string>> = {
+  key: 'Chave',
+  merchantName: 'Nome do recebedor',
+  merchantCity: 'Cidade',
+  amount: 'Valor',
+  txid: 'Identificador (txid)',
+};
+
+export const describePixFormIssue = (issue: PixFormIssue): string => {
+  const label = PIX_FORM_LABELS[issue.field];
+  switch (issue.code) {
+    case 'required':
+      return `${label}: obrigatório`;
+    case 'too-long':
+      return `${label}: no máximo ${issue.max} caracteres`;
+    case 'invalid-amount':
+      return `${label}: use números, como 10,50`;
+    case 'invalid-txid':
+      return `${label}: só letras e números, até 25`;
   }
 };

@@ -8,6 +8,7 @@ Obrigado por querer ajudar o Kit Dev Brasil! Este guia explica como o projeto fu
 - [Ambiente local](#ambiente-local)
 - [Arquitetura](#arquitetura)
 - [Regras do código](#regras-do-código)
+- [Regras dos documentos](#regras-dos-documentos)
 - [Testes e cobertura](#testes-e-cobertura)
 - [Commits](#commits)
 - [Pull requests](#pull-requests)
@@ -67,6 +68,26 @@ Padrões usados:
 - **Adapter:** o resto do código fala com interfaces (`IEditor`, `ISettings`, `INotifier`); só `src/vscode/` importa a API do VS Code.
 - **Result tipado** em vez de exceções para validação, e `RandomSource` injetado para testes determinísticos.
 - **Painel como view:** a página da barra lateral não tem regra de negócio. Ela manda mensagens tipadas (`shared/sidebarProtocol.ts`) e a extensão responde com view models prontos (`presentation/sidebarViews.ts`). O HTML usa CSP com nonce e só `textContent`, nunca `innerHTML`.
+
+## Regras dos documentos
+
+| Documento | Regra |
+| --- | --- |
+| CPF | 9 dígitos + 2 DVs mod 11 (pesos 10→2 e 11→2) |
+| CNPJ | 12 posições `[0-9A-Z]` + 2 DVs; valor do caractere = ASCII − 48; pesos 2→9 cíclicos da direita |
+| PIS/PASEP | 10 dígitos + DV mod 11 (pesos 3,2,9,8,7,6,5,4,3,2) |
+| RENAVAM | 10 dígitos + DV `(soma × 10) mod 11` (mesmos pesos do PIS) |
+| CNH | 9 dígitos + 2 DVs; aceita a regra atual e a variante DENATRAN (com o ajuste "dsc") |
+| Título de eleitor | 8 sequenciais + UF (01–28) + 2 DVs; aceita também a regra do TSE para SP e MG (resto 0 vira 1) |
+| RG (SP) | 8 dígitos + DV (pesos 2→9; 10 vira X, 11 vira 0) |
+| CNS | 15 dígitos com soma ponderada (15→1) múltipla de 11; definitivos começam com 1 ou 2, provisórios com 7, 8 ou 9 |
+| Placa | `ABC1234` (antiga) ou `ABC1D23` (Mercosul); o 5º caractere converte 0–9 ↔ A–J |
+| Cartão | Luhn + bandeira pelo prefixo |
+| Boleto bancário | linha de 47 (3 campos mod 10) e barras de 44 (DV geral mod 11, 0/10/11 viram 1); fator de vencimento desde 07/10/1997 e novo ciclo desde 22/02/2025 |
+| Boleto de arrecadação | começa com 8; linha de 48 (4 blocos); identificador de valor 6/7 usa mod 10 e 8/9 usa mod 11 |
+| PIX | BR Code EMV com CRC16-CCITT-FALSE |
+
+Quando há mais de uma variante conhecida de uma regra, a validação aceita qualquer uma e a geração só produz números válidos em todas.
 
 ## Testes e cobertura
 

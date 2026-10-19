@@ -15,7 +15,8 @@ const values = () => {
 
 describe('generatorIds', () => {
   it('recognizes only known generators', () => {
-    expect(GENERATOR_IDS).toEqual(['cpf', 'cnpj', 'alphanumericCnpj']);
+    expect(GENERATOR_IDS).toHaveLength(16);
+    expect(GENERATOR_IDS).toContain('cardElo');
     expect(isGeneratorId('cnpj')).toBe(true);
     expect(isGeneratorId('pix')).toBe(false);
     expect(isGeneratorId(undefined)).toBe(false);
