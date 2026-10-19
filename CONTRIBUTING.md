@@ -50,10 +50,13 @@ src/
   extension.ts      Composition root: o único lugar que instancia classes concretas
   domain/           Regras puras, sem VS Code nem Node
     shared/         Dígito verificador mod 11, Result, geração aleatória
-    documents/      CPF, CNPJ (inclusive alfanumérico) e o registro de documentos
+    documents/      Os 17 documentos (CPF, CNPJ, CEP, CNH…) e o registro de documentos
+    brazil/         Tabelas offline: UFs com DDDs e faixas de CEP dos Correios, cidades, nomes e logradouros
+    boleto/         Módulos 10 e 11, fator de vencimento, decodificação e codificação de boletos
     pix/            CRC16, TLV, decodificação e codificação do BR Code, regras de validação
   application/      Casos de uso: achar tokens na linha, inspecionar, transformar e gerar
-  presentation/     Textos em português e renderização em Markdown
+    people/         Pessoas e empresas fictícias coerentes (cidade → CEP → DDD → título)
+  presentation/     Textos em português, renderização em Markdown e exportação (JSON, TypeScript, texto)
   infrastructure/   Implementações que dependem do Node (aleatoriedade segura)
   shared/           Protocolo tipado entre a extensão e o painel da barra lateral
   vscode/           Adaptadores finos: hover, editor, configurações, notificações, comandos e o provider do painel
@@ -78,6 +81,7 @@ Padrões usados:
 | PIS/PASEP | 10 dígitos + DV mod 11 (pesos 3,2,9,8,7,6,5,4,3,2) |
 | RENAVAM | 10 dígitos + DV `(soma × 10) mod 11` (mesmos pesos do PIS) |
 | CNH | 9 dígitos + 2 DVs; aceita a regra atual e a variante DENATRAN (com o ajuste "dsc") |
+| CEP | 8 dígitos dentro de uma das faixas oficiais dos Correios da UF (tabela em `domain/brazil/states.ts`) |
 | Título de eleitor | 8 sequenciais + UF (01–28) + 2 DVs; aceita também a regra do TSE para SP e MG (resto 0 vira 1) |
 | RG (SP) | 8 dígitos + DV (pesos 2→9; 10 vira X, 11 vira 0) |
 | CNS | 15 dígitos com soma ponderada (15→1) múltipla de 11; definitivos começam com 1 ou 2, provisórios com 7, 8 ou 9 |

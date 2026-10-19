@@ -3,6 +3,9 @@ import { createDocumentCatalog } from './application/catalog';
 import { DocumentGenerator } from './application/generation/DocumentGenerator';
 import { GeneratedValues } from './application/generation/GeneratedValues';
 import type { GeneratorId } from './application/generation/generatorIds';
+import { AddressGenerator } from './application/people/AddressGenerator';
+import { CompanyGenerator } from './application/people/CompanyGenerator';
+import { PersonGenerator } from './application/people/PersonGenerator';
 import { TextInspector } from './application/inspection/TextInspector';
 import { TokenScanner } from './application/scanning/TokenScanner';
 import { TextTransformer } from './application/transform/TextTransformer';
@@ -13,6 +16,9 @@ import { decodeBrCode } from './domain/pix/decodeBrCode';
 import { CryptoRandomSource } from './infrastructure/CryptoRandomSource';
 import { qrCodeDataUrl } from './infrastructure/qrCode';
 import { InspectionRenderer } from './presentation/InspectionRenderer';
+import { generateProfile } from './presentation/profiles';
+import type { ProfileGenerators, ProfileKind } from './presentation/profiles';
+import { GenerateProfileCommand } from './vscode/commands/GenerateProfileCommand';
 import { COMMAND_IDS } from './vscode/commands/commandIds';
 import { GenerateDocumentCommand } from './vscode/commands/GenerateDocumentCommand';
 import { InspectPixInputCommand, ValidateInputCommand } from './vscode/commands/InputCommands';
@@ -46,7 +52,16 @@ export function activate(context: vscode.ExtensionContext): void {
   const clipboard = new VsCodeClipboard();
   const prompt = new VsCodeInputPrompt();
   const report = new PixReport({ decode: decodeBrCode, renderer, presenter: new VsCodeMarkdownPresenter(), clipboard, notifier });
-  const generator = new DocumentGenerator<GeneratorId>(catalog.generators, new CryptoRandomSource());
+  const random = new CryptoRandomSource();
+  const generator = new DocumentGenerator<GeneratorId>(catalog.generators, random);
+  const addresses = new AddressGenerator(random);
+  const profiles: ProfileGenerators = {
+    person: new PersonGenerator(catalog.person, addresses, random, today),
+    company: new CompanyGenerator(catalog.company, addresses, random, today),
+  };
+  const quickPick = new VsCodeQuickPick();
+  const profileCommand = (commandId: string, kind: ProfileKind) =>
+    new GenerateProfileCommand(commandId, kind, (chosen) => generateProfile(profiles, chosen, { state: undefined, formatted: settings.generateFormatted }), quickPick, clipboard, editors, notifier);
 
   const formatSelection = new TransformSelectionCommand(
     COMMAND_IDS.formatSelection,
@@ -68,7 +83,9 @@ export function activate(context: vscode.ExtensionContext): void {
     generateCommand(COMMAND_IDS.generateCpf, 'cpf'),
     generateCommand(COMMAND_IDS.generateCnpj, 'cnpj'),
     generateCommand(COMMAND_IDS.generateAlphanumericCnpj, 'alphanumericCnpj'),
-    new PickGeneratorCommand(COMMAND_IDS.generateDocument, new VsCodeQuickPick(), GENERATOR_GROUPS, (id) => generateCommand(COMMAND_IDS.generateDocument, id).execute()),
+    new PickGeneratorCommand(COMMAND_IDS.generateDocument, quickPick, GENERATOR_GROUPS, (id) => generateCommand(COMMAND_IDS.generateDocument, id).execute()),
+    profileCommand(COMMAND_IDS.generatePerson, 'person'),
+    profileCommand(COMMAND_IDS.generateCompany, 'company'),
     formatSelection,
     unformatSelection,
     new TransformSelectionCommand(COMMAND_IDS.convertBoleto, (text) => convertBoleto(text, today()), COMMAND_MESSAGES.nothingToConvert, editors, notifier),
@@ -86,6 +103,7 @@ export function activate(context: vscode.ExtensionContext): void {
     decode: decodeBrCode,
     decodeBoleto: (text) => decodeBoleto(text, today()),
     qrCode: qrCodeDataUrl,
+    profiles,
     report,
     clipboard,
     notifier,

@@ -166,6 +166,11 @@ h2 {
   margin: 8px 0 0;
 }
 
+.fields--copyable {
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+}
+
 .fields__label {
   color: var(--vscode-descriptionForeground);
 }

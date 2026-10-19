@@ -20,6 +20,7 @@ import { sequenceRandom } from '../../fakes/random';
 import { BCB_PIX, OFFICIAL_BANK_BARCODE, OFFICIAL_BANK_LINE, VALID_CNPJ_DIGITS, VALID_CPF, VALID_CPF_DIGITS } from '../../fakes/samples';
 import { catalogGenerators, emptyGenerated } from '../../fakes/generators';
 import { Uri } from '../../mocks/vscode';
+import { fakeProfiles } from '../../fakes/profiles';
 
 const setup = () => {
   const cpf = new Cpf();
@@ -49,6 +50,7 @@ const setup = () => {
       decode: decodeBrCode,
       decodeBoleto: decodeTestBoleto,
       qrCode: (text: string) => `data:qr,${text.length}`,
+      profiles: fakeProfiles(),
       report: report as unknown as PixReport,
       clipboard,
       notifier,
@@ -90,6 +92,7 @@ describe('renderSidebarHtml', () => {
     expect(html).toContain('<link rel="stylesheet" href="app.css">');
     expect(html).toContain('id="document-input"');
     expect(html).toContain('id="pix-input"');
+    expect(html).toContain('<option value="SP">SP · São Paulo</option>');
   });
 });
 
@@ -203,6 +206,26 @@ describe('SidebarViewProvider', () => {
     expect(notifier.statuses).toEqual([COMMAND_MESSAGES.textCopied]);
   });
 
+  it('generates people and companies for the chosen state', async () => {
+    const { send, posted, settings } = setup();
+    await send({ type: 'generate-profile', kind: 'person', state: 'CE' });
+    const person = posted.at(-1);
+    expect(person).toMatchObject({ type: 'profile-generated' });
+    const rows = person?.type === 'profile-generated' ? person.view.fields : [];
+    expect(rows[0]?.[0]).toBe('Nome');
+    expect(rows.find(([label]) => label === 'UF')?.[1]).toBe('CE');
+    expect(rows.find(([label]) => label === 'CPF')?.[1]).toMatch(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/);
+    settings.generateFormatted = false;
+    await send({ type: 'generate-profile', kind: 'company', state: 'XX' });
+    const company = posted.at(-1);
+    const companyRows = company?.type === 'profile-generated' ? company.view.fields : [];
+    expect(companyRows[0]?.[0]).toBe('Razão social');
+    expect(companyRows.find(([label]) => label === 'CNPJ')?.[1]).toMatch(/^\d{14}$/);
+    await send({ type: 'generate-profile', kind: 'robot', state: 'SP' });
+    const fallback = posted.at(-1);
+    expect(fallback?.type === 'profile-generated' && fallback.view.fields[0]?.[0]).toBe('Nome');
+  });
+
   it('runs the selection commands', async () => {
     const { send, formatSelection, unformatSelection } = setup();
     await send({ type: 'format-selection' });
@@ -240,6 +263,7 @@ function setupServices() {
     decode: decodeBrCode,
     decodeBoleto: decodeTestBoleto,
     qrCode: () => '',
+    profiles: fakeProfiles(),
     report: {} as PixReport,
     clipboard: { writeText: () => Promise.resolve() },
     notifier: new FakeNotifier(),

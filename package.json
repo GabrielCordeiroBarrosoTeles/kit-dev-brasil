@@ -1,7 +1,7 @@
 {
   "name": "kit-dev-brasil",
   "displayName": "Kit Dev Brasil: CPF, CNPJ, PIX, Boleto e mais",
-  "description": "O 4Devs dentro do VS Code: gere e valide CPF, CNPJ, CNH, RG, PIS, título, placa, cartão e outros, entenda boletos e PIX e gere PIX de teste com QR code. Tudo local.",
+  "description": "O 4Devs dentro do VS Code: gere pessoas e empresas fictícias coerentes, gere e valide CPF, CNPJ, CEP, CNH, RG, PIS, título, placa, cartão e outros, entenda boletos e PIX e gere PIX de teste com QR code. Tudo local.",
   "version": "0.0.0",
   "publisher": "GabrielCordeiro",
   "license": "MIT",
@@ -50,8 +50,8 @@
     "brazil",
     "dados de teste",
     "test data",
-    "mascara",
-    "pagamentos",
+    "gerador de pessoas",
+    "cep",
     "fake data",
     "febraban",
     "cns"
@@ -80,6 +80,16 @@
       {
         "command": "kitDevBrasil.generateDocument",
         "title": "Gerar documento…",
+        "category": "Kit Dev Brasil"
+      },
+      {
+        "command": "kitDevBrasil.generatePerson",
+        "title": "Gerar pessoa fictícia…",
+        "category": "Kit Dev Brasil"
+      },
+      {
+        "command": "kitDevBrasil.generateCompany",
+        "title": "Gerar empresa fictícia…",
         "category": "Kit Dev Brasil"
       },
       {
@@ -165,6 +175,14 @@
         {
           "command": "kitDevBrasil.generateDocument",
           "group": "1_generate@4"
+        },
+        {
+          "command": "kitDevBrasil.generatePerson",
+          "group": "1_generate@5"
+        },
+        {
+          "command": "kitDevBrasil.generateCompany",
+          "group": "1_generate@6"
         },
         {
           "command": "kitDevBrasil.formatSelection",

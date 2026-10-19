@@ -19,6 +19,7 @@ export const DEFAULT_PATTERNS: readonly TokenPattern[] = [
   { kind: 'document', masked: true, expression: bounded('\\d{3} \\d{4} \\d{4} \\d{4}') },
   { kind: 'document', masked: true, expression: bounded('\\d{4} \\d{4} \\d{4}') },
   { kind: 'document', masked: true, expression: bounded('[A-Z]{3}-\\d{4}|[A-Z]{3}\\d[A-Z]\\d{2}') },
+  { kind: 'document', masked: true, expression: bounded('\\d{5}-\\d{3}') },
   { kind: 'document', masked: false, expression: bounded('\\d{14}') },
   { kind: 'document', masked: false, expression: bounded('\\d{11}') },
 ];

@@ -6,6 +6,7 @@ import { queryElement } from './dom';
 import { GeneratorList } from './GeneratorList';
 import { InspectorSection } from './InspectorSection';
 import { PixGeneratorForm } from './PixGeneratorForm';
+import { ProfileGeneratorForm } from './ProfileGeneratorForm';
 import './types';
 
 const bootstrap = (): void => {
@@ -56,6 +57,17 @@ const bootstrap = (): void => {
     },
     post,
   );
+  const profiles = new ProfileGeneratorForm(
+    {
+      kind: element('#profile-kind'),
+      state: element('#profile-state'),
+      generate: element('#generate-profile'),
+      fields: element('#profile-fields'),
+      actions: element('#profile-actions'),
+      copy: { json: element('#copy-profile-json'), typescript: element('#copy-profile-typescript'), text: element('#copy-profile-text') },
+    },
+    post,
+  );
   element<HTMLButtonElement>('#format-selection').addEventListener('click', () => post({ type: 'format-selection' }));
   element<HTMLButtonElement>('#unformat-selection').addEventListener('click', () => post({ type: 'unformat-selection' }));
 
@@ -76,6 +88,9 @@ const bootstrap = (): void => {
         break;
       case 'pix-generated':
         pixGenerator.render(message.view);
+        break;
+      case 'profile-generated':
+        profiles.render(message.view);
         break;
     }
   });

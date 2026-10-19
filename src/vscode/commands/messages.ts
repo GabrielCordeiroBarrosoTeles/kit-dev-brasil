@@ -13,6 +13,8 @@ export const COMMAND_MESSAGES = {
   nothingToConvert: 'A seleção não é um boleto (linha digitável ou código de barras).',
   textCopied: 'Copiado para a área de transferência.',
   pickGenerator: 'Qual documento gerar?',
+  pickProfileFormat: 'Em qual formato?',
+  profileCopied: (label: string) => `${label} fictícia copiada para a área de transferência.`,
   validateTitle: 'Validar documento',
   validatePlaceholder: 'Cole CPF, CNPJ, CNH, RG, título, PIS, CNS, RENAVAM, placa ou cartão',
   copyFormatted: 'Copiar formatado',

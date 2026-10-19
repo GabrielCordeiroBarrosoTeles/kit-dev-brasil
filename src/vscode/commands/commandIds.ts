@@ -3,6 +3,8 @@ export const COMMAND_IDS = {
   generateCnpj: 'kitDevBrasil.generateCnpj',
   generateAlphanumericCnpj: 'kitDevBrasil.generateAlphanumericCnpj',
   generateDocument: 'kitDevBrasil.generateDocument',
+  generatePerson: 'kitDevBrasil.generatePerson',
+  generateCompany: 'kitDevBrasil.generateCompany',
   formatSelection: 'kitDevBrasil.formatSelection',
   unformatSelection: 'kitDevBrasil.unformatSelection',
   validateSelection: 'kitDevBrasil.validateSelection',

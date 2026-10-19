@@ -2,7 +2,7 @@ import type { GeneratorId } from '../application/generation/generatorIds';
 import type { GeneratorGroup } from '../shared/generatorCatalog';
 import { GENERATOR_LABELS } from '../shared/generatorCatalog';
 import type { SidebarState } from '../shared/sidebarProtocol';
-import { createElement } from './dom';
+import { createElement, iconButton } from './dom';
 import type { PostMessage } from './types';
 
 const EMPTY_VALUE = 'clique em ↻ para gerar';
@@ -47,18 +47,9 @@ export class GeneratorList {
     row.append(
       createElement('span', 'generator__label', label),
       value,
-      this.iconButton('⧉', `Copiar ${label}`, () => this.post({ type: 'copy-generated', id })),
-      this.iconButton('↻', `Gerar outro ${label}`, () => this.post({ type: 'generate', id })),
+      iconButton('⧉', `Copiar ${label}`, () => this.post({ type: 'copy-generated', id })),
+      iconButton('↻', `Gerar outro ${label}`, () => this.post({ type: 'generate', id })),
     );
     return row;
-  }
-
-  private iconButton(icon: string, label: string, onClick: () => void): HTMLButtonElement {
-    const button = createElement('button', 'icon-button', icon);
-    button.type = 'button';
-    button.title = label;
-    button.setAttribute('aria-label', label);
-    button.addEventListener('click', onClick);
-    return button;
   }
 }

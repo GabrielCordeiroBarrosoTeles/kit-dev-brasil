@@ -9,6 +9,7 @@ import { createElement, debounce, queryElement } from '../../src/webview/dom';
 import { GeneratorList } from '../../src/webview/GeneratorList';
 import { InspectorSection } from '../../src/webview/InspectorSection';
 import { PixGeneratorForm } from '../../src/webview/PixGeneratorForm';
+import { ProfileGeneratorForm } from '../../src/webview/ProfileGeneratorForm';
 
 const loadMarkup = () => {
   const html = renderSidebarHtml({ cspSource: 's', scriptUri: 'x.js', styleUri: 'x.css', nonce: 'n' });
@@ -54,9 +55,9 @@ describe('GeneratorList', () => {
 
   it('renders a row per generator with copy and regenerate buttons', () => {
     const { posted } = setup();
-    expect([...document.querySelectorAll('.generator-group__title')].map((title) => title.textContent)).toEqual(['Pessoa', 'Empresa', 'Veículo', 'Cartão de crédito']);
-    expect([...document.querySelectorAll<HTMLDetailsElement>('.generator-group')].map((group) => group.open)).toEqual([true, false, false, false]);
-    expect(document.querySelectorAll('.generator__label')).toHaveLength(16);
+    expect([...document.querySelectorAll('.generator-group__title')].map((title) => title.textContent)).toEqual(['Pessoa', 'Empresa', 'Endereço', 'Veículo', 'Cartão de crédito']);
+    expect([...document.querySelectorAll<HTMLDetailsElement>('.generator-group')].map((group) => group.open)).toEqual([true, false, false, false, false]);
+    expect(document.querySelectorAll('.generator__label')).toHaveLength(17);
     element<HTMLButtonElement>('[aria-label="Gerar outro CPF"]').click();
     element<HTMLButtonElement>('[aria-label="Copiar CNPJ"]').click();
     document.querySelectorAll<HTMLElement>('.generator__value')[2]?.click();
@@ -228,6 +229,8 @@ describe('main', () => {
     deliver({ type: 'pix-result', view: { state: 'valid', summary: 'PIX válido', fields: [], issues: [] } });
     deliver({ type: 'boleto-result', view: { state: 'valid', summary: 'Boleto válido', fields: [], issues: [] } });
     deliver({ type: 'pix-generated', view: { code: 'CODE', qrDataUrl: 'data:,', issues: [] } });
+    deliver({ type: 'profile-generated', view: { fields: [['Nome', 'Ana']], exports: { json: '{}', typescript: '', text: '' } } });
+    expect(element<HTMLElement>('#profile-fields .fields__value').textContent).toBe('Ana');
     expect(element<HTMLElement>('#boleto-summary').textContent).toBe('✅ Boleto válido');
     expect(element<HTMLTextAreaElement>('#pix-code').value).toBe('CODE');
     element<HTMLButtonElement>('#open-pix-report').click();
@@ -255,5 +258,55 @@ describe('main', () => {
     element<HTMLButtonElement>('#unformat-selection').click();
     expect(posted.slice(-2)).toEqual([{ type: 'format-selection' }, { type: 'unformat-selection' }]);
     vi.unstubAllGlobals();
+  });
+});
+
+describe('ProfileGeneratorForm', () => {
+  const setup = () => {
+    const posted: SidebarToHostMessage[] = [];
+    const form = new ProfileGeneratorForm(
+      {
+        kind: element('#profile-kind'),
+        state: element('#profile-state'),
+        generate: element('#generate-profile'),
+        fields: element('#profile-fields'),
+        actions: element('#profile-actions'),
+        copy: { json: element('#copy-profile-json'), typescript: element('#copy-profile-typescript'), text: element('#copy-profile-text') },
+      },
+      (message) => posted.push(message),
+    );
+    return { posted, form };
+  };
+
+  it('offers person or company and every state', () => {
+    expect([...element<HTMLSelectElement>('#profile-kind').options].map((option) => option.value)).toEqual(['person', 'company']);
+    const states = [...element<HTMLSelectElement>('#profile-state').options];
+    expect(states).toHaveLength(28);
+    expect([states[0]?.value, states[0]?.textContent, states[1]?.textContent]).toEqual(['', 'UF aleatória', 'AC · Acre']);
+  });
+
+  it('requests a profile, renders copyable fields and copies the exports', () => {
+    const { posted, form } = setup();
+    element<HTMLButtonElement>('#copy-profile-json').click();
+    element<HTMLSelectElement>('#profile-kind').value = 'company';
+    element<HTMLSelectElement>('#profile-state').value = 'CE';
+    element<HTMLButtonElement>('#generate-profile').click();
+    expect(element<HTMLElement>('#profile-fields').hidden).toBe(true);
+    form.render({ fields: [['Nome', 'Ana'], ['CEP', '60160-230']], exports: { json: '{}', typescript: 'const a = {};', text: 'Nome: Ana' } });
+    expect(element<HTMLElement>('#profile-fields').hidden).toBe(false);
+    expect(element<HTMLElement>('#profile-actions').hidden).toBe(false);
+    expect([...document.querySelectorAll('#profile-fields .fields__value')].map((value) => value.textContent)).toEqual(['Ana', '60160-230']);
+    element<HTMLButtonElement>('[aria-label="Copiar CEP"]').click();
+    element<HTMLButtonElement>('#copy-profile-json').click();
+    element<HTMLButtonElement>('#copy-profile-typescript').click();
+    element<HTMLButtonElement>('#copy-profile-text').click();
+    expect(posted).toEqual([
+      { type: 'copy-text', text: '' },
+      { type: 'generate-profile', kind: 'company', state: 'CE' },
+      { type: 'copy-text', text: '60160-230' },
+      { type: 'copy-text', text: '{}' },
+      { type: 'copy-text', text: 'const a = {};' },
+      { type: 'copy-text', text: 'Nome: Ana' },
+    ]);
   });
 });

@@ -29,6 +29,7 @@ describe('TokenScanner', () => {
     expect(scanner.findAt(`cpf: "${VALID_CPF}"`, 8)).toMatchObject({ kind: 'document', masked: true, text: VALID_CPF });
     expect(scanner.findAt(`id=${VALID_ALPHANUMERIC_CNPJ}`, 5)).toMatchObject({ masked: true, text: VALID_ALPHANUMERIC_CNPJ });
     expect(scanner.findAt(`x ${VALID_CNPJ_DIGITS} y`, 4)).toMatchObject({ masked: false, text: VALID_CNPJ_DIGITS });
+    expect(scanner.findAt('cep: 01310-100;', 7)).toMatchObject({ kind: 'document', masked: true, text: '01310-100' });
     expect(scanner.findAt(`x ${VALID_CPF_DIGITS} y`, 2)).toMatchObject({ masked: false, text: VALID_CPF_DIGITS, start: 2, end: 13 });
   });
 

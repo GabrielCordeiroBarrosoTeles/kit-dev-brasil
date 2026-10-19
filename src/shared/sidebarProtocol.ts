@@ -1,5 +1,7 @@
 import type { GeneratorId } from '../application/generation/generatorIds';
 import type { PixForm } from '../application/pix/generateStaticPix';
+import type { ExportFormat } from '../presentation/profileExporters';
+import type { ProfileKind } from '../presentation/profiles';
 
 export type ResultState = 'empty' | 'valid' | 'invalid' | 'unknown';
 
@@ -30,6 +32,11 @@ export interface PixGeneratedView {
   readonly issues: readonly string[];
 }
 
+export interface ProfileView {
+  readonly fields: readonly FieldRow[];
+  readonly exports: Readonly<Record<ExportFormat, string>>;
+}
+
 export interface SidebarState {
   readonly generated: Readonly<Record<GeneratorId, string | undefined>>;
   readonly formatted: boolean;
@@ -40,7 +47,8 @@ export type HostToSidebarMessage =
   | { readonly type: 'document-result'; readonly view: DocumentView }
   | { readonly type: 'pix-result'; readonly view: PixView }
   | { readonly type: 'boleto-result'; readonly view: BoletoView }
-  | { readonly type: 'pix-generated'; readonly view: PixGeneratedView };
+  | { readonly type: 'pix-generated'; readonly view: PixGeneratedView }
+  | { readonly type: 'profile-generated'; readonly view: ProfileView };
 
 export type SidebarToHostMessage =
   | { readonly type: 'ready' }
@@ -55,6 +63,7 @@ export type SidebarToHostMessage =
   | { readonly type: 'inspect-boleto'; readonly text: string }
   | { readonly type: 'generate-pix'; readonly form: PixForm }
   | { readonly type: 'copy-text'; readonly text: string }
+  | { readonly type: 'generate-profile'; readonly kind: ProfileKind; readonly state: string }
   | { readonly type: 'copy-boleto'; readonly text: string; readonly format: BoletoFormatChoice }
   | { readonly type: 'format-selection' }
   | { readonly type: 'unformat-selection' };

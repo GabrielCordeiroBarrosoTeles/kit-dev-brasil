@@ -48,6 +48,7 @@ describe('messages', () => {
     [{ code: 'invalid-format', expected: 'ABC-1234' } as const, 'não segue o formato esperado: ABC-1234'],
     [{ code: 'invalid-prefix' } as const, 'começa com um dígito que não existe nesse documento'],
     [{ code: 'invalid-checksum' } as const, 'a conta de verificação não fecha'],
+    [{ code: 'unknown-range' } as const, 'não pertence a nenhuma faixa de CEP dos Correios'],
     [{ code: 'invalid-check-digits', expected: '25', actual: '26' } as const, 'dígitos verificadores errados: esperado 25, encontrado 26'],
   ])('describes document issue %j', (issue, text) => {
     expect(describeDocumentIssue(issue)).toBe(text);

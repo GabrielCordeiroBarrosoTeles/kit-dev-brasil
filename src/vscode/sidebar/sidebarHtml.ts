@@ -1,3 +1,14 @@
+import { STATES } from '../../domain/brazil/states';
+import { PROFILE_LABELS } from '../../presentation/profiles';
+
+const option = (value: string, label: string): string => `<option value="${value}">${label}</option>`;
+
+const KIND_OPTIONS = Object.entries(PROFILE_LABELS)
+  .map(([value, label]) => option(value, label))
+  .join('');
+
+const STATE_OPTIONS = [option('', 'UF aleatória'), ...STATES.map((state) => option(state.code, `${state.code} · ${state.name}`))].join('');
+
 export interface SidebarHtmlAssets {
   readonly cspSource: string;
   readonly scriptUri: string;
@@ -20,6 +31,21 @@ export const renderSidebarHtml = ({ cspSource, scriptUri, styleUri, nonce }: Sid
       <label class="toggle"><input type="checkbox" id="formatted"> com máscara</label>
     </header>
     <div id="generators" class="generators"></div>
+  </section>
+
+  <section class="section" aria-labelledby="profile-title">
+    <header class="section__header"><h2 id="profile-title">Pessoa e empresa fictícia</h2></header>
+    <div class="form__row">
+      <select id="profile-kind" class="field" aria-label="Tipo">${KIND_OPTIONS}</select>
+      <select id="profile-state" class="field" aria-label="UF">${STATE_OPTIONS}</select>
+    </div>
+    <div class="actions"><button id="generate-profile" class="button" type="button">Gerar</button></div>
+    <dl id="profile-fields" class="fields fields--copyable" hidden></dl>
+    <div id="profile-actions" class="actions" hidden>
+      <button id="copy-profile-json" class="button button--secondary" type="button">Copiar JSON</button>
+      <button id="copy-profile-typescript" class="button button--secondary" type="button">Copiar TypeScript</button>
+      <button id="copy-profile-text" class="button button--secondary" type="button">Copiar texto</button>
+    </div>
   </section>
 
   <section class="section" aria-labelledby="validate-title">

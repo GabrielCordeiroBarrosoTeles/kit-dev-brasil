@@ -8,6 +8,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Gerador de **pessoa** e de **empresa** fictícias com dados coerentes entre si: CEP dentro da faixa da cidade, DDD da cidade, título de eleitor com o código da UF, e-mail derivado do nome no domínio reservado `example.com` e idade compatível com a data de nascimento. Escolha da UF e exportação como JSON, objeto TypeScript ou texto, no painel e nos comandos **Gerar pessoa fictícia…** e **Gerar empresa fictícia…**.
+- CEP como documento: validação pelas faixas oficiais dos Correios das 27 UFs, nome da cidade ou do estado no resultado, geração por UF, hover e grupo **Endereço** no painel. Tudo offline.
 - Novos documentos: RG (SP), CNH, título de eleitor, PIS/PASEP/NIT, Cartão do SUS (CNS), placa (antiga e Mercosul, com conversão), RENAVAM e cartão de crédito (Visa, Mastercard, American Express, Elo e Hipercard), com geração e validação.
 - Validação de qualquer documento, com detecção automática do tipo e de números que servem para mais de um documento.
 - Boleto bancário e de arrecadação: leitura da linha digitável e do código de barras (banco, valor, vencimento com o novo ciclo de 2025), validação campo a campo, cópia e conversão entre os formatos.

@@ -6,10 +6,13 @@ import { GENERATOR_IDS, isGeneratorId } from '../../application/generation/gener
 import type { BoletoDecoder, BrCodeDecoder, TextInspector } from '../../application/inspection/TextInspector';
 import { generateStaticPix } from '../../application/pix/generateStaticPix';
 import type { PixForm } from '../../application/pix/generateStaticPix';
+import { isStateCode } from '../../domain/brazil/states';
 import { describePixFormIssue } from '../../presentation/messages';
+import { generateProfile } from '../../presentation/profiles';
+import type { ProfileGenerators, ProfileKind } from '../../presentation/profiles';
 import type { InspectionRenderer } from '../../presentation/InspectionRenderer';
 import { summarizeCandidates } from '../../presentation/candidateSummary';
-import { EMPTY_DOCUMENT_VIEW, EMPTY_INSPECTION_VIEW, toBoletoView, toDocumentView, toPixView } from '../../presentation/sidebarViews';
+import { EMPTY_DOCUMENT_VIEW, EMPTY_INSPECTION_VIEW, toBoletoView, toDocumentView, toPixView, toProfileView } from '../../presentation/sidebarViews';
 import type { BoletoFormatChoice, HostToSidebarMessage, SidebarState, SidebarToHostMessage } from '../../shared/sidebarProtocol';
 import type { ICommand } from '../commands/types';
 import { COMMAND_MESSAGES } from '../commands/messages';
@@ -25,6 +28,7 @@ export interface SidebarServices {
   readonly decode: BrCodeDecoder;
   readonly decodeBoleto: BoletoDecoder;
   readonly qrCode: (text: string) => string;
+  readonly profiles: ProfileGenerators;
   readonly report: PixReport;
   readonly clipboard: IClipboard;
   readonly notifier: INotifier;
@@ -50,6 +54,7 @@ const MESSAGE_TYPES: ReadonlySet<string> = new Set<SidebarToHostMessage['type']>
   'copy-boleto',
   'generate-pix',
   'copy-text',
+  'generate-profile',
   'format-selection',
   'unformat-selection',
 ]);
@@ -92,6 +97,7 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
     'copy-boleto': ({ text, format }) => this.copyBoleto(text, format),
     'generate-pix': ({ form }) => this.generatePix(form),
     'copy-text': ({ text }) => this.copyText(text),
+    'generate-profile': ({ kind, state }) => this.generateProfile(kind, state),
     'format-selection': () => this.services.formatSelection.execute(),
     'unformat-selection': () => this.services.unformatSelection.execute(),
   };
@@ -196,6 +202,12 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
     const { code, issues } = generateStaticPix(toPixForm(form));
     const view = { code, qrDataUrl: code === undefined ? undefined : this.services.qrCode(code), issues: issues.map(describePixFormIssue) };
     this.post({ type: 'pix-generated', view });
+  }
+
+  private generateProfile(kind: ProfileKind, state: string): void {
+    const options = { state: isStateCode(state) ? state : undefined, formatted: this.services.settings.generateFormatted };
+    const profile = generateProfile(this.services.profiles, kind === 'company' ? 'company' : 'person', options);
+    this.post({ type: 'profile-generated', view: toProfileView(profile) });
   }
 
   private async copyText(text: string): Promise<void> {

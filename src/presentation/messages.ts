@@ -44,6 +44,8 @@ export const describeDocumentIssue = (issue: DocumentIssue): string => {
       return 'começa com um dígito que não existe nesse documento';
     case 'invalid-checksum':
       return 'a conta de verificação não fecha';
+    case 'unknown-range':
+      return 'não pertence a nenhuma faixa de CEP dos Correios';
     case 'invalid-check-digits':
       return `dígitos verificadores errados: esperado ${issue.expected}, encontrado ${issue.actual}`;
   }

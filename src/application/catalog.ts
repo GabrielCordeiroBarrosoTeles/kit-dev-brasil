@@ -1,3 +1,4 @@
+import { Cep } from '../domain/documents/Cep';
 import { Cnh } from '../domain/documents/Cnh';
 import { Cnpj } from '../domain/documents/Cnpj';
 import { Cns } from '../domain/documents/Cns';
@@ -12,10 +13,13 @@ import { VoterTitle } from '../domain/documents/VoterTitle';
 import { GENERATOR_LABELS } from '../shared/generatorCatalog';
 import type { GeneratorSpec } from './generation/DocumentGenerator';
 import type { GeneratorId } from './generation/generatorIds';
+import type { PersonDocuments } from './people/PersonGenerator';
 
 export interface DocumentCatalog {
   readonly types: readonly DocumentType[];
   readonly generators: Readonly<Record<GeneratorId, GeneratorSpec>>;
+  readonly person: PersonDocuments;
+  readonly company: DocumentType;
 }
 
 export const createDocumentCatalog = (): DocumentCatalog => {
@@ -29,13 +33,16 @@ export const createDocumentCatalog = (): DocumentCatalog => {
   const cns = new Cns();
   const plate = new LicensePlate();
   const card = new CreditCard();
+  const cep = new Cep();
   const spec = (id: GeneratorId, type: DocumentType, generate: GeneratorSpec['generate'] = (random) => type.generate(random)): GeneratorSpec => ({
     label: GENERATOR_LABELS[id],
     type,
     generate,
   });
   return {
-    types: [cpf, cnpj, cnh, pis, voterTitle, renavam, rg, cns, plate, card],
+    person: { cpf, rg, cnh, pis, voterTitle },
+    company: cnpj,
+    types: [cpf, cnpj, cnh, pis, voterTitle, renavam, rg, cns, plate, card, cep],
     generators: {
       cpf: spec('cpf', cpf),
       rg: spec('rg', rg),
@@ -53,6 +60,7 @@ export const createDocumentCatalog = (): DocumentCatalog => {
       cardAmex: spec('cardAmex', card, (random) => card.generateFor('amex', random)),
       cardElo: spec('cardElo', card, (random) => card.generateFor('elo', random)),
       cardHipercard: spec('cardHipercard', card, (random) => card.generateFor('hipercard', random)),
+      cep: spec('cep', cep),
     },
   };
 };

@@ -26,3 +26,12 @@ export const debounce = <T>(delayMs: number, action: (value: T) => void): ((valu
 const RESULT_MARKS: Readonly<Record<Exclude<ResultState, 'empty'>, string>> = { valid: '✅', invalid: '❌', unknown: '⚠️' };
 
 export const resultText = (state: ResultState, message: string): string => (state === 'empty' ? '' : `${RESULT_MARKS[state]} ${message}`);
+
+export const iconButton = (icon: string, label: string, onClick: () => void): HTMLButtonElement => {
+  const button = createElement('button', 'icon-button', icon);
+  button.type = 'button';
+  button.title = label;
+  button.setAttribute('aria-label', label);
+  button.addEventListener('click', onClick);
+  return button;
+};

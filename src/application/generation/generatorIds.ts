@@ -15,6 +15,7 @@ export const GENERATOR_IDS = [
   'cardAmex',
   'cardElo',
   'cardHipercard',
+  'cep',
 ] as const;
 
 export type GeneratorId = (typeof GENERATOR_IDS)[number];

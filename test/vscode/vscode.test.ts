@@ -223,6 +223,9 @@ describe('extension', () => {
     expect(hover.contents.value).toContain('**Boleto**');
     await commandHandlers.get(COMMAND_IDS.generateDocument)?.();
     expect(withBoleto.replaced.at(-1)?.[1]).toMatch(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/);
+    await commandHandlers.get(COMMAND_IDS.generatePerson)?.();
+    await commandHandlers.get(COMMAND_IDS.generateCompany)?.();
+    expect(withBoleto.replaced.slice(-2).map(([, text]) => Object.keys(JSON.parse(text))[0])).toEqual(['nome', 'razaoSocial']);
     expect(deactivate()).toBeUndefined();
   });
 });

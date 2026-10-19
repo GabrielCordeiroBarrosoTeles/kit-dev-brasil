@@ -22,11 +22,13 @@ export const GENERATOR_LABELS: Readonly<Record<GeneratorId, string>> = {
   cardAmex: 'American Express',
   cardElo: 'Elo',
   cardHipercard: 'Hipercard',
+  cep: 'CEP',
 };
 
 export const GENERATOR_GROUPS: readonly GeneratorGroup[] = [
   { label: 'Pessoa', ids: ['cpf', 'rg', 'cnh', 'voterTitle', 'pis', 'cns'] },
   { label: 'Empresa', ids: ['cnpj', 'alphanumericCnpj'] },
+  { label: 'Endereço', ids: ['cep'] },
   { label: 'Veículo', ids: ['licensePlate', 'oldLicensePlate', 'renavam'] },
   { label: 'Cartão de crédito', ids: ['cardVisa', 'cardMastercard', 'cardAmex', 'cardElo', 'cardHipercard'] },
 ];

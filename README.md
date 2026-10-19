@@ -1,7 +1,7 @@
 <h1 align="center">Kit Dev Brasil</h1>
 
 <p align="center">
-  O 4Devs dentro do VS Code: gere e valide 16 documentos brasileiros, entenda boletos e PIX e gere PIX de teste com QR code, sem sair do editor.
+  O 4Devs dentro do VS Code: gere pessoas e empresas fictícias coerentes, gere e valide 17 documentos brasileiros, entenda boletos e PIX e gere PIX de teste com QR code, sem sair do editor.
 </p>
 
 <p align="center">
@@ -20,11 +20,33 @@ O Kit Dev Brasil traz tudo isso para o VS Code e roda **100% na sua máquina**.
 
 ## O que já funciona
 
-### 16 geradores e validadores de documentos
+### Pessoas e empresas fictícias, coerentes e offline
+Gere uma pessoa ou uma empresa inteira para preencher formulários e popular o banco de teste. Diferente dos geradores comuns, **os dados combinam entre si**:
+
+- o **CEP pertence à cidade** sorteada (faixas oficiais dos Correios) e o **DDD é o da cidade**, no celular e no telefone fixo;
+- o **título de eleitor tem o código da UF** da pessoa;
+- CPF, RG, CNH, PIS e CNPJ são **válidos**; a idade bate com a data de nascimento e todo mundo é maior de idade;
+- o **e-mail sai do nome** e usa só o domínio reservado `example.com`, que nunca entrega mensagem para ninguém.
+
+Escolha a UF (ou deixe aleatória), copie campo a campo ou tudo de uma vez como **JSON**, **objeto TypeScript** ou **texto**.
+
+```ts
+const pessoa = {
+  nome: 'Aline Souza Lima',
+  cpf: '800.606.882-89',
+  tituloEleitor: '8444 0404 0779',
+  celular: '(85) 96440-8664',
+  endereco: { cidade: 'Fortaleza', uf: 'CE', cep: '60726-272' /* … */ },
+  // …
+};
+```
+
+### 17 geradores e validadores de documentos
 | Grupo | Documentos |
 | --- | --- |
 | **Pessoa** | CPF, RG (padrão SP, inclusive com X), CNH, título de eleitor (com a UF), PIS/PASEP/NIT e Cartão do SUS (CNS) |
 | **Empresa** | CNPJ e o novo **CNPJ alfanumérico** |
+| **Endereço** | CEP, validado contra as faixas dos Correios de cada estado e mostrando a cidade (*São Paulo · SP*) |
 | **Veículo** | placa Mercosul, placa antiga (com a conversão entre elas) e RENAVAM |
 | **Cartão de crédito** | Visa, Mastercard, American Express, Elo e Hipercard, com a bandeira reconhecida na validação |
 
@@ -41,11 +63,12 @@ O Kit Dev Brasil traz tudo isso para o VS Code e roda **100% na sua máquina**.
 - **Gerar PIX de teste com QR code:** informe chave, recebedor, cidade e, se quiser, valor e txid. O Kit monta o código, remove acentos como o Banco Central recomenda e mostra o **QR code** para testar no app do banco.
 
 ### Hover no código
-Passe o mouse sobre PIX, boleto, CPF, CNPJ, PIS, RG, título, CNS, placa ou cartão escritos com máscara e veja se são válidos, sem sair do arquivo. Números sem máscara só aparecem quando válidos, para não confundir com telefones e outros números.
+Passe o mouse sobre PIX, boleto, CPF, CNPJ, CEP, PIS, RG, título, CNS, placa ou cartão escritos com máscara e veja se são válidos, sem sair do arquivo. Números sem máscara só aparecem quando válidos, para não confundir com telefones e outros números.
 
 ### Como usar
 O Kit Dev Brasil tem um **ícone próprio na barra lateral** (o losango da bandeira), que abre o painel **Ferramentas**:
 
+- **Pessoa e empresa fictícia:** escolha o tipo e a UF, clique em **Gerar** e copie cada campo ou o registro inteiro como JSON, TypeScript ou texto.
 - **Gerar:** os documentos em grupos recolhíveis. O número aparece no painel e já vai para a área de transferência, **sem mexer no seu código**, com os botões **copiar** e **gerar outro**. A caixa **com máscara** escolhe o formato.
 - **Validar documento:** campo com resultado **ao vivo** e o botão **Copiar formatado**.
 - **PIX copia-e-cola**, **Gerar PIX de teste** e **Boleto:** campos com resultado ao vivo e botões para copiar.
@@ -55,7 +78,8 @@ Pela paleta (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>, digit
 
 | Comando | O que faz |
 | --- | --- |
-| **Gerar documento…** | Escolhe qualquer um dos 16 documentos e insere no cursor (sem arquivo aberto, copia) |
+| **Gerar pessoa fictícia… / Gerar empresa fictícia…** | Escolhe o formato (JSON, TypeScript ou texto) e insere no cursor, um registro diferente para cada cursor (sem arquivo aberto, copia) |
+| **Gerar documento…** | Escolhe qualquer um dos 17 documentos e insere no cursor (sem arquivo aberto, copia) |
 | **Gerar CPF / CNPJ / CNPJ alfanumérico** | Atalhos diretos, um número diferente para cada cursor |
 | **Validar documento (colar)…** | Caixa com resultado ao vivo |
 | **Validar seleção** | Valida o texto selecionado |
@@ -72,14 +96,13 @@ Pela paleta (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>, digit
 
 Acompanhe tudo no [roadmap](https://github.com/users/GabrielCordeiroBarrosoTeles/projects/4):
 
-- **Pessoas e empresas fictícias e coerentes:** CEP que bate com a cidade, DDD do mesmo estado, e-mail com o nome.
 - **Gerar em lote:** dezenas de registros como JSON, CSV, SQL ou array TypeScript, com **semente fixa** para testes reproduzíveis.
 - **Avisos no código** com correção rápida, **snippets** (`cpf` + Tab) e **histórico** no painel.
 - **Mais documentos:** inscrição estadual por estado, conta bancária, certidões e chave de NF-e.
 
 ## Privacidade
 
-Nada sai da sua máquina. A única exceção planejada é a consulta de CEP, que só acontece quando você pede e pode ser desligada. Sem telemetria.
+Nada sai da sua máquina. Os CEPs, DDDs e cidades vêm de tabelas dentro da extensão. A única exceção planejada é a consulta online de CEP (rua e bairro), que só acontece quando você pede e pode ser desligada. Sem telemetria.
 
 ## Contribuindo
 

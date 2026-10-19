@@ -31,3 +31,7 @@ export const placaMercosul = 'ABC1C34';
 export const cartaoVisaDeTeste = '4111 1111 1111 1111';
 export const cartaoAmexDeTeste = '3782 822463 10005';
 export const onzeDigitosAmbiguos = '60020666261';
+
+export const cepDaAvenidaPaulista = '01310-100';
+export const cepDeFortaleza = '60160-230';
+export const cepForaDasFaixas = '00000-100';

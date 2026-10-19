@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ascendingWeights, cyclicWeightsFromRight, descendingWeights, luhnCheckDigit, mod11CheckDigit, toDigits, weightedSum } from '../../../src/domain/shared/checkDigit';
-import { pick, randomAlphanumeric, randomDigits, randomFrom } from '../../../src/domain/shared/random';
+import { pick, pickTwoDistinct, randomAlphanumeric, randomDigits, randomFrom } from '../../../src/domain/shared/random';
 import { fail, ok } from '../../../src/domain/shared/Result';
 import { sequenceRandom } from '../../fakes/random';
 
@@ -33,6 +33,9 @@ describe('random helpers', () => {
   it('picks an item from a non-empty list', () => {
     expect(pick(['a', 'b', 'c'], sequenceRandom([2]))).toBe('c');
     expect(pick(['a'], sequenceRandom([0]))).toBe('a');
+    expect(pickTwoDistinct(['a', 'b', 'c'], sequenceRandom([2, 0]))).toEqual(['c', 'a']);
+    expect(pickTwoDistinct(['a', 'b', 'c'], sequenceRandom([1, 1]))).toEqual(['b', 'a']);
+    expect(pickTwoDistinct(['a', 'b'], sequenceRandom([0, 0]))).toEqual(['a', 'b']);
   });
 
   it('picks characters from the alphabet', () => {

@@ -2,10 +2,13 @@ import type { DocumentInspection } from '../application/inspection/types';
 import { summarizeCandidates } from './candidateSummary';
 import type { BoletoDecoding } from '../domain/boleto/types';
 import type { BrCodeDecoding } from '../domain/pix/types';
-import type { BoletoView, DocumentView, InspectionView, PixView } from '../shared/sidebarProtocol';
+import type { BoletoView, DocumentView, InspectionView, PixView, ProfileView } from '../shared/sidebarProtocol';
 import type { InspectionRenderer } from './InspectionRenderer';
 import { describeBoletoIssue, describeBrCodeIssue } from './messages';
 import { describePixFields } from './pixFields';
+import { EXPORT_FORMATS, exportProfile } from './profileExporters';
+import type { ExportFormat } from './profileExporters';
+import type { Profile } from './profiles';
 
 export const EMPTY_DOCUMENT_VIEW: DocumentView = { state: 'empty', message: '', formatted: undefined };
 
@@ -29,4 +32,9 @@ export const toBoletoView = (decoding: BoletoDecoding, renderer: InspectionRende
   summary: renderer.summarizeBoleto(decoding),
   fields: decoding.boleto ? renderer.describeBoleto(decoding.boleto) : [],
   issues: decoding.issues.map(describeBoletoIssue),
+});
+
+export const toProfileView = (profile: Profile): ProfileView => ({
+  fields: [...profile.fields, ...profile.address].map(({ label, display }) => [label, display] as const),
+  exports: Object.fromEntries(EXPORT_FORMATS.map((format) => [format, exportProfile(profile, format)])) as Record<ExportFormat, string>,
 });
