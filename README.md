@@ -7,10 +7,10 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/GabrielCordeiroBarrosoTeles/kit-dev-brasil" alt="Licença MIT"></a>
   <a href="https://github.com/GabrielCordeiroBarrosoTeles/kit-dev-brasil/stargazers"><img src="https://img.shields.io/github/stars/GabrielCordeiroBarrosoTeles/kit-dev-brasil" alt="Estrelas no GitHub"></a>
-  <a href="https://github.com/users/GabrielCordeiroBarrosoTeles/projects"><img src="https://img.shields.io/badge/roadmap-GitHub_Projects-blue" alt="Roadmap"></a>
+  <a href="https://github.com/users/GabrielCordeiroBarrosoTeles/projects/4"><img src="https://img.shields.io/badge/roadmap-GitHub_Projects-blue" alt="Roadmap"></a>
 </p>
 
-> **Em desenvolvimento.** A primeira versão ainda não foi publicada. Acompanhe o [roadmap](https://github.com/users/GabrielCordeiroBarrosoTeles/projects) e dê uma ⭐ para ser avisado.
+> **Em desenvolvimento.** A primeira versão ainda não foi publicada. Acompanhe o [roadmap](https://github.com/users/GabrielCordeiroBarrosoTeles/projects/4) e dê uma ⭐ para ser avisado.
 
 ## Por quê
 
