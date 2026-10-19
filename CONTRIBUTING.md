@@ -6,6 +6,7 @@ Obrigado por querer ajudar o Kit Dev Brasil! Este guia explica como o projeto fu
 
 - [Antes de começar](#antes-de-começar)
 - [Ambiente local](#ambiente-local)
+- [Arquitetura](#arquitetura)
 - [Regras do código](#regras-do-código)
 - [Testes e cobertura](#testes-e-cobertura)
 - [Commits](#commits)
@@ -20,23 +21,49 @@ Obrigado por querer ajudar o Kit Dev Brasil! Este guia explica como o projeto fu
 
 ## Ambiente local
 
-> O código da primeira versão ainda está sendo escrito. Esta seção será completada com os comandos exatos assim que ele existir.
+Você vai precisar do **Node.js 20** ou mais novo e do **VS Code 1.95** ou mais novo.
 
-Você vai precisar de:
+```bash
+git clone https://github.com/GabrielCordeiroBarrosoTeles/kit-dev-brasil.git
+cd kit-dev-brasil
+npm ci
+```
 
-- **Node.js 20** ou mais novo
-- **VS Code 1.106** ou mais novo
+| Comando | O que faz |
+| --- | --- |
+| `npm run typecheck` | Verifica os tipos |
+| `npm test` | Roda os testes |
+| `npm run coverage` | Roda os testes com cobertura (precisa ficar em 100%) |
+| `npm run build` | Typecheck + bundle em `dist/` |
+| `npm run watch` | Rebuild automático enquanto você edita |
+| `npm run package` | Gera o `.vsix` |
 
-O fluxo será o de qualquer extensão do VS Code: `npm ci`, abrir a pasta no VS Code e apertar **F5** para abrir uma janela de teste com a extensão carregada.
+Para testar no editor, abra a pasta no VS Code e aperte **F5**. Abre uma janela com a extensão carregada e a pasta `examples/`, que tem PIX, CPFs e CNPJs fictícios para testar o hover e os comandos.
 
-## Regras do código
+## Arquitetura
 
-- **TypeScript** em modo estrito.
-- **SOLID** e funções pequenas, com nomes que explicam o que fazem. Prefira nomes claros a comentários.
-- Dependências entram pelo construtor, e o código depende de interfaces declaradas em `types.ts`.
-- Toda a lógica de PIX, boleto e documentos fica em módulos **puros**, sem depender da API do VS Code, para ser fácil de testar e reaproveitar.
-- **Nada de rede** sem o usuário pedir. A consulta de CEP é a única exceção planejada, e sempre opcional.
-- Código, nomes e mensagens de commit em **inglês**. Textos que o usuário vê na extensão e a documentação, em **português**.
+O código segue camadas, com as dependências sempre apontando para dentro:
+
+```
+src/
+  extension.ts      Composition root: o único lugar que instancia classes concretas
+  domain/           Regras puras, sem VS Code nem Node
+    shared/         Dígito verificador mod 11, Result, geração aleatória
+    documents/      CPF, CNPJ (inclusive alfanumérico) e o registro de documentos
+    pix/            CRC16, TLV, decodificação e codificação do BR Code, regras de validação
+  application/      Casos de uso: achar tokens na linha, inspecionar, transformar e gerar
+  presentation/     Textos em português e renderização em Markdown
+  infrastructure/   Implementações que dependem do Node (aleatoriedade segura)
+  vscode/           Adaptadores finos: hover, editor, configurações, notificações e comandos
+```
+
+Padrões usados:
+
+- **Strategy + Registry:** cada documento implementa `DocumentType`; para suportar um documento novo, crie a classe e registre no `extension.ts`, sem mexer no resto.
+- **Specification:** cada regra do PIX é uma função em `brCodeRules.ts` que devolve os problemas encontrados.
+- **Template Method:** os comandos estendem `EditorCommand`, que já trata o caso de não haver editor aberto.
+- **Adapter:** o resto do código fala com interfaces (`IEditor`, `ISettings`, `INotifier`); só `src/vscode/` importa a API do VS Code.
+- **Result tipado** em vez de exceções para validação, e `RandomSource` injetado para testes determinísticos.
 
 ## Testes e cobertura
 

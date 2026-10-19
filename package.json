@@ -1,0 +1,172 @@
+{
+  "name": "kit-dev-brasil",
+  "displayName": "Kit Dev Brasil: CPF, CNPJ e PIX",
+  "description": "O 4Devs dentro do VS Code: gere e valide CPF e CNPJ e entenda PIX copia-e-cola sem sair do editor. Tudo local.",
+  "version": "0.0.0",
+  "publisher": "GabrielCordeiro",
+  "license": "MIT",
+  "author": {
+    "name": "Gabriel Cordeiro"
+  },
+  "homepage": "https://github.com/GabrielCordeiroBarrosoTeles/kit-dev-brasil#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GabrielCordeiroBarrosoTeles/kit-dev-brasil.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GabrielCordeiroBarrosoTeles/kit-dev-brasil/issues"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other",
+    "Snippets",
+    "Linters"
+  ],
+  "keywords": [
+    "cpf",
+    "cnpj",
+    "cnpj alfanumerico",
+    "pix",
+    "pix copia e cola",
+    "br code",
+    "qr code pix",
+    "boleto",
+    "gerador",
+    "gerador de cpf",
+    "gerador de cnpj",
+    "validador",
+    "4devs",
+    "brasil",
+    "brazil",
+    "dados de teste",
+    "test data",
+    "mascara",
+    "pagamentos"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "kitDevBrasil.generateCpf",
+        "title": "Gerar CPF",
+        "category": "Kit Dev Brasil"
+      },
+      {
+        "command": "kitDevBrasil.generateCnpj",
+        "title": "Gerar CNPJ",
+        "category": "Kit Dev Brasil"
+      },
+      {
+        "command": "kitDevBrasil.generateAlphanumericCnpj",
+        "title": "Gerar CNPJ alfanumérico",
+        "category": "Kit Dev Brasil"
+      },
+      {
+        "command": "kitDevBrasil.formatSelection",
+        "title": "Formatar seleção",
+        "category": "Kit Dev Brasil"
+      },
+      {
+        "command": "kitDevBrasil.unformatSelection",
+        "title": "Remover máscara da seleção",
+        "category": "Kit Dev Brasil"
+      },
+      {
+        "command": "kitDevBrasil.validateSelection",
+        "title": "Validar seleção",
+        "category": "Kit Dev Brasil"
+      },
+      {
+        "command": "kitDevBrasil.inspectPix",
+        "title": "Inspecionar PIX copia-e-cola",
+        "category": "Kit Dev Brasil"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "kitDevBrasil.editorContext",
+        "label": "Kit Dev Brasil"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "kitDevBrasil.editorContext",
+          "group": "1_modification@99"
+        }
+      ],
+      "kitDevBrasil.editorContext": [
+        {
+          "command": "kitDevBrasil.generateCpf",
+          "group": "1_generate@1"
+        },
+        {
+          "command": "kitDevBrasil.generateCnpj",
+          "group": "1_generate@2"
+        },
+        {
+          "command": "kitDevBrasil.generateAlphanumericCnpj",
+          "group": "1_generate@3"
+        },
+        {
+          "command": "kitDevBrasil.formatSelection",
+          "group": "2_transform@1",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "kitDevBrasil.unformatSelection",
+          "group": "2_transform@2",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "kitDevBrasil.validateSelection",
+          "group": "3_inspect@1",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "kitDevBrasil.inspectPix",
+          "group": "3_inspect@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Kit Dev Brasil",
+      "properties": {
+        "kitDevBrasil.generate.formatted": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Inserir CPF e CNPJ gerados com máscara (`123.456.789-09`). Desligue para inserir só os caracteres."
+        },
+        "kitDevBrasil.hover.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Mostrar detalhes ao passar o mouse sobre PIX copia-e-cola, CPF e CNPJ."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "npm run typecheck && node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "vscode:prepublish": "npm run typecheck && npm test && node esbuild.mjs --production",
+    "package": "vsce package",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@types/node": "20.19.43",
+    "@types/vscode": "1.95.0",
+    "@vitest/coverage-v8": "4.1.12",
+    "@vscode/vsce": "4.0.0",
+    "esbuild": "0.28.2",
+    "typescript": "5.9.3",
+    "vitest": "4.1.12"
+  }
+}
