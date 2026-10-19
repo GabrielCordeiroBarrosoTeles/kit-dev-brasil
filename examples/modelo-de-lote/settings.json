@@ -1,0 +1,31 @@
+{
+  "kitDevBrasil.batch.templates": {
+    "clientes": {
+      "source": "person",
+      "count": 50,
+      "format": "sql",
+      "name": "customers",
+      "seed": "42",
+      "state": "SP",
+      "columns": {
+        "nome": "full_name",
+        "cpf": "document",
+        "email": "mail",
+        "celular": "phone",
+        "cep": "zip_code"
+      }
+    },
+    "fornecedores": {
+      "source": "company",
+      "count": 20,
+      "format": "csv",
+      "seed": "fornecedores-v1",
+      "columns": {
+        "razaoSocial": "razao_social",
+        "cnpj": "cnpj",
+        "cidade": "cidade",
+        "uf": "uf"
+      }
+    }
+  }
+}

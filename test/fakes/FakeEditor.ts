@@ -1,13 +1,18 @@
 import { vi } from 'vitest';
 import type { CursorLine, IEditor, IEditorProvider, INotifier, ISettings } from '../../src/vscode/types';
 
-export const fakeSettings = (overrides: Partial<Pick<ISettings, 'generateFormatted' | 'hoverEnabled'>> = {}) => {
+export const fakeSettings = (overrides: Partial<Pick<ISettings, 'generateFormatted' | 'hoverEnabled' | 'batchTemplates'>> = {}) => {
   const settings = {
     generateFormatted: true,
     hoverEnabled: true,
+    batchTemplates: {} as Readonly<Record<string, unknown>>,
     ...overrides,
     setGenerateFormatted: vi.fn((value: boolean) => {
       settings.generateFormatted = value;
+      return Promise.resolve();
+    }),
+    saveBatchTemplate: vi.fn((name: string, template: unknown) => {
+      settings.batchTemplates = { ...settings.batchTemplates, [name]: template };
       return Promise.resolve();
     }),
   };

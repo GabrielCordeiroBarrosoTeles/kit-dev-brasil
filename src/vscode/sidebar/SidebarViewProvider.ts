@@ -7,17 +7,19 @@ import type { BoletoDecoder, BrCodeDecoder, TextInspector } from '../../applicat
 import { generateStaticPix } from '../../application/pix/generateStaticPix';
 import type { PixForm } from '../../application/pix/generateStaticPix';
 import { isStateCode } from '../../domain/brazil/states';
-import { describePixFormIssue } from '../../presentation/messages';
+import { toBatchRequest, toBatchTemplate, validTemplates } from '../../presentation/batchRequest';
+import { describeBatchIssue, describePixFormIssue } from '../../presentation/messages';
 import { generateProfile } from '../../presentation/profiles';
 import type { ProfileGenerators, ProfileKind } from '../../presentation/profiles';
 import type { InspectionRenderer } from '../../presentation/InspectionRenderer';
 import { summarizeCandidates } from '../../presentation/candidateSummary';
-import { EMPTY_DOCUMENT_VIEW, EMPTY_INSPECTION_VIEW, toBoletoView, toDocumentView, toPixView, toProfileView } from '../../presentation/sidebarViews';
-import type { BoletoFormatChoice, HostToSidebarMessage, SidebarState, SidebarToHostMessage } from '../../shared/sidebarProtocol';
+import { EMPTY_DOCUMENT_VIEW, EMPTY_INSPECTION_VIEW, toBoletoView, toBatchTemplateViews, toDocumentView, toPixView, toProfileView } from '../../presentation/sidebarViews';
+import type { BatchFormValues, BoletoFormatChoice, HostToSidebarMessage, SidebarState, SidebarToHostMessage } from '../../shared/sidebarProtocol';
 import type { ICommand } from '../commands/types';
 import { COMMAND_MESSAGES } from '../commands/messages';
 import type { PixReport } from '../commands/PixReport';
-import type { IClipboard, INotifier, ISettings } from '../types';
+import type { IBatchRunner } from '../batch/BatchRunner';
+import type { IClipboard, IInputPrompt, INotifier, ISettings } from '../types';
 import { renderSidebarHtml } from './sidebarHtml';
 
 export interface SidebarServices {
@@ -29,6 +31,8 @@ export interface SidebarServices {
   readonly decodeBoleto: BoletoDecoder;
   readonly qrCode: (text: string) => string;
   readonly profiles: ProfileGenerators;
+  readonly batch: IBatchRunner;
+  readonly prompt: IInputPrompt;
   readonly report: PixReport;
   readonly clipboard: IClipboard;
   readonly notifier: INotifier;
@@ -55,6 +59,8 @@ const MESSAGE_TYPES: ReadonlySet<string> = new Set<SidebarToHostMessage['type']>
   'generate-pix',
   'copy-text',
   'generate-profile',
+  'batch-generate',
+  'batch-save-template',
   'format-selection',
   'unformat-selection',
 ]);
@@ -77,6 +83,8 @@ const toPixForm = (form: unknown): PixForm => ({
   txid: field(form, 'txid'),
 });
 
+const asObject = (value: unknown): Readonly<Record<string, unknown>> => (typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {});
+
 const createNonce = (): string => randomBytes(16).toString('base64');
 
 export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.Disposable {
@@ -84,7 +92,7 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
   private readonly unsubscribe: () => void;
 
   private readonly handlers: Handlers = {
-    ready: () => this.postState(),
+    ready: () => this.ready(),
     generate: ({ id }) => this.copyGenerated(id, true),
     'copy-generated': ({ id }) => this.copyGenerated(id, false),
     'set-formatted': ({ value }) => this.setFormatted(value),
@@ -98,6 +106,8 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
     'generate-pix': ({ form }) => this.generatePix(form),
     'copy-text': ({ text }) => this.copyText(text),
     'generate-profile': ({ kind, state }) => this.generateProfile(kind, state),
+    'batch-generate': ({ values }) => this.generateBatch(values),
+    'batch-save-template': ({ values }) => this.saveBatchTemplate(values),
     'format-selection': () => this.services.formatSelection.execute(),
     'unformat-selection': () => this.services.unformatSelection.execute(),
   };
@@ -147,6 +157,49 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider, vscode.D
 
   private postState(): void {
     this.post({ type: 'state', state: this.state() });
+  }
+
+  private ready(): void {
+    this.postState();
+    this.postBatchState();
+  }
+
+  private postBatchState(): void {
+    this.post({ type: 'batch-state', templates: toBatchTemplateViews(validTemplates(this.services.settings.batchTemplates)) });
+  }
+
+  private parseBatch(values: BatchFormValues) {
+    const parsing = toBatchRequest({ ...asObject(values), formatted: this.services.settings.generateFormatted });
+    this.post({ type: 'batch-result', issues: parsing.issues.map(describeBatchIssue) });
+    return parsing.request;
+  }
+
+  private async generateBatch(values: BatchFormValues): Promise<void> {
+    const request = this.parseBatch(values);
+    if (request) {
+      await this.services.batch.run(request);
+    }
+  }
+
+  private async saveBatchTemplate(values: BatchFormValues): Promise<void> {
+    const request = this.parseBatch(values);
+    if (!request) {
+      return;
+    }
+    const name = (
+      await this.services.prompt.ask({
+        title: COMMAND_MESSAGES.templateNameTitle,
+        placeholder: COMMAND_MESSAGES.templateNamePlaceholder,
+        value: '',
+        feedback: (text) => (text.trim() === '' ? { valid: false, message: COMMAND_MESSAGES.templateNameRequired } : undefined),
+      })
+    )?.trim();
+    if (!name) {
+      return;
+    }
+    await this.services.settings.saveBatchTemplate(name, toBatchTemplate(request));
+    this.postBatchState();
+    this.services.notifier.status(COMMAND_MESSAGES.templateSaved(name));
   }
 
   private async copyGenerated(id: GeneratorId, regenerate: boolean): Promise<void> {

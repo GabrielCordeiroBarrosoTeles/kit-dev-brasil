@@ -101,6 +101,11 @@
         "category": "Kit Dev Brasil"
       },
       {
+        "command": "kitDevBrasil.generateBatch",
+        "title": "Gerar em lote…",
+        "category": "Kit Dev Brasil"
+      },
+      {
         "command": "kitDevBrasil.formatSelection",
         "title": "Formatar seleção",
         "category": "Kit Dev Brasil"
@@ -193,6 +198,10 @@
           "group": "1_generate@6"
         },
         {
+          "command": "kitDevBrasil.generateBatch",
+          "group": "1_generate@7"
+        },
+        {
           "command": "kitDevBrasil.formatSelection",
           "group": "2_transform@1",
           "when": "editorHasSelection"
@@ -230,6 +239,62 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Mostrar detalhes ao passar o mouse sobre PIX copia-e-cola, CPF e CNPJ."
+        },
+        "kitDevBrasil.batch.templates": {
+          "type": "object",
+          "default": {},
+          "markdownDescription": "Modelos de **Gerar em lote**, salvos pelo painel (**Salvar como modelo**) ou escritos à mão. Guarde em `.vscode/settings.json` para versionar com o projeto. Exemplo: `{ \"clientes\": { \"source\": \"person\", \"count\": 50, \"format\": \"sql\", \"name\": \"customers\", \"seed\": \"42\", \"state\": \"SP\", \"columns\": { \"nome\": \"full_name\", \"cpf\": \"document\", \"email\": \"mail\" } } }`",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "source",
+              "format"
+            ],
+            "properties": {
+              "source": {
+                "type": "string",
+                "markdownDescription": "`person`, `company` ou o id de um documento (`cpf`, `cnpj`, `cep`…)."
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000,
+                "default": 10
+              },
+              "format": {
+                "type": "string",
+                "enum": [
+                  "json",
+                  "csv",
+                  "sql",
+                  "typescript"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "description": "Nome da tabela (SQL) ou da variável (TypeScript)."
+              },
+              "seed": {
+                "type": "string",
+                "description": "Semente: a mesma semente gera sempre os mesmos dados."
+              },
+              "state": {
+                "type": "string",
+                "description": "UF (ex.: SP). Sem UF, sorteia."
+              },
+              "formatted": {
+                "type": "boolean",
+                "default": true
+              },
+              "columns": {
+                "type": "object",
+                "description": "Campo do Kit → nome da coluna. Só os campos listados entram.",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
         }
       }
     }

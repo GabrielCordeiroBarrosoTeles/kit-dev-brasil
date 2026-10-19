@@ -37,6 +37,21 @@ export interface ProfileView {
   readonly exports: Readonly<Record<ExportFormat, string>>;
 }
 
+export interface BatchFormValues {
+  readonly source: string;
+  readonly count: string;
+  readonly state: string;
+  readonly format: string;
+  readonly seed: string;
+  readonly name: string;
+  readonly columns: readonly { readonly key: string; readonly column: string }[];
+}
+
+export interface BatchTemplateView {
+  readonly name: string;
+  readonly values: BatchFormValues;
+}
+
 export interface SidebarState {
   readonly generated: Readonly<Record<GeneratorId, string | undefined>>;
   readonly formatted: boolean;
@@ -48,7 +63,9 @@ export type HostToSidebarMessage =
   | { readonly type: 'pix-result'; readonly view: PixView }
   | { readonly type: 'boleto-result'; readonly view: BoletoView }
   | { readonly type: 'pix-generated'; readonly view: PixGeneratedView }
-  | { readonly type: 'profile-generated'; readonly view: ProfileView };
+  | { readonly type: 'profile-generated'; readonly view: ProfileView }
+  | { readonly type: 'batch-state'; readonly templates: readonly BatchTemplateView[] }
+  | { readonly type: 'batch-result'; readonly issues: readonly string[] };
 
 export type SidebarToHostMessage =
   | { readonly type: 'ready' }
@@ -64,6 +81,8 @@ export type SidebarToHostMessage =
   | { readonly type: 'generate-pix'; readonly form: PixForm }
   | { readonly type: 'copy-text'; readonly text: string }
   | { readonly type: 'generate-profile'; readonly kind: ProfileKind; readonly state: string }
+  | { readonly type: 'batch-generate'; readonly values: BatchFormValues }
+  | { readonly type: 'batch-save-template'; readonly values: BatchFormValues }
   | { readonly type: 'copy-boleto'; readonly text: string; readonly format: BoletoFormatChoice }
   | { readonly type: 'format-selection' }
   | { readonly type: 'unformat-selection' };

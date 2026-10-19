@@ -3,7 +3,7 @@
 <h1 align="center">Kit Dev Brasil</h1>
 
 <p align="center">
-  O 4Devs dentro do VS Code: gere pessoas e empresas fictícias coerentes, gere e valide 17 documentos brasileiros, entenda boletos e PIX e gere PIX de teste com QR code, sem sair do editor.
+  O 4Devs dentro do VS Code: gere pessoas e empresas fictícias coerentes, gere dados em lote (JSON, CSV, SQL, TypeScript) com semente fixa, gere e valide 17 documentos brasileiros, entenda boletos e PIX e gere PIX de teste com QR code, sem sair do editor.
 </p>
 
 <p align="center">
@@ -14,6 +14,8 @@
 </p>
 
 > **Instale pelo [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=GabrielCordeiro.kit-dev-brasil)** ou pelo VS Code: abra Extensões (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>) e procure **Kit Dev Brasil**. Acompanhe o [roadmap](https://github.com/users/GabrielCordeiroBarrosoTeles/projects/4) e dê uma ⭐.
+
+<p align="center"><img src="assets/panel-tour.png" alt="Painel do Kit Dev Brasil com as abas Gerar, Pessoas, Lote, Validar e PIX" width="100%"></p>
 
 ## Por quê
 
@@ -44,6 +46,21 @@ const pessoa = {
 };
 ```
 
+### Dados em lote, reproduzíveis
+Gere de 1 a 1000 pessoas, empresas ou documentos de uma vez e receba o resultado numa aba nova, pronto para usar:
+
+- **JSON**, para mock de API e fixture; **CSV**, para planilha e importação; **SQL `INSERT`**, para popular o banco; **array TypeScript**, para testes e seeds.
+- **Semente fixa:** com a mesma semente (`42`, `clientes-v1`…), o Kit gera sempre os mesmos dados, na sua máquina, na do colega e no CI. Com semente, as datas partem de 01/01/2026 para o lote não mudar com o tempo.
+- **Escolha os campos e o nome de cada coluna** para bater com a sua tabela (`nome` → `full_name`, `cpf` → `document`).
+- **Modelos:** salve a configuração com **Salvar como modelo** e ela vai para o `.vscode/settings.json`, junto com o projeto. Veja o exemplo em [`examples/modelo-de-lote/settings.json`](examples/modelo-de-lote/settings.json).
+
+```sql
+INSERT INTO customers (full_name, document, mail) VALUES
+  ('Bruna Gomes Costa', '884.874.950-01', 'bruna.costa96@example.com'),
+  ('Rodrigo Ramos Cavalcanti', '308.929.995-00', 'rodrigo.cavalcanti21@example.com'),
+  ...
+```
+
 ### 17 geradores e validadores de documentos
 | Grupo | Documentos |
 | --- | --- |
@@ -69,19 +86,24 @@ const pessoa = {
 Passe o mouse sobre PIX, boleto, CPF, CNPJ, CEP, PIS, RG, título, CNS, placa ou cartão escritos com máscara e veja se são válidos, sem sair do arquivo. Números sem máscara só aparecem quando válidos, para não confundir com telefones e outros números.
 
 ### Como usar
-O Kit Dev Brasil tem um **ícone próprio na barra lateral** (o losango da bandeira), que abre o painel **Ferramentas**:
+O Kit Dev Brasil tem um **ícone próprio na barra lateral** (`< • >`), que abre o painel **Ferramentas**, organizado em abas:
 
-- **Pessoa e empresa fictícia:** escolha o tipo e a UF, clique em **Gerar** e copie cada campo ou o registro inteiro como JSON, TypeScript ou texto.
-- **Gerar:** os documentos em grupos recolhíveis. O número aparece no painel e já vai para a área de transferência, **sem mexer no seu código**, com os botões **copiar** e **gerar outro**. A caixa **com máscara** escolhe o formato.
-- **Validar documento:** campo com resultado **ao vivo** e o botão **Copiar formatado**.
-- **PIX copia-e-cola**, **Gerar PIX de teste** e **Boleto:** campos com resultado ao vivo e botões para copiar.
-- **Texto selecionado no editor:** **Formatar** e **Remover máscara**.
+| Aba | O que tem |
+| --- | --- |
+| **Gerar** | Os 17 documentos em grupos. O número aparece no painel e já vai para a área de transferência, **sem mexer no seu código**, com **copiar** e **gerar outro**. A caixa **com máscara** escolhe o formato. |
+| **Pessoas** | Pessoa ou empresa fictícia por UF; copie cada campo ou tudo como JSON, TypeScript ou texto. |
+| **Lote** | Tipo, quantidade, formato, UF, semente, tabela e os campos com o nome de cada coluna. **Gerar** abre o resultado numa aba nova; **Salvar como modelo** guarda nas configurações do projeto. |
+| **Validar** | Documento e boleto com resultado **ao vivo**, e **Formatar** / **Remover máscara** no texto selecionado. |
+| **PIX** | Ler um PIX copia-e-cola e gerar PIX de teste com QR code. |
+
+O painel lembra a última aba aberta.
 
 Pela paleta (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>, digite **Kit Dev Brasil**) ou pelo botão direito (submenu **Kit Dev Brasil**):
 
 | Comando | O que faz |
 | --- | --- |
 | **Gerar pessoa fictícia… / Gerar empresa fictícia…** | Escolhe o formato (JSON, TypeScript ou texto) e insere no cursor, um registro diferente para cada cursor (sem arquivo aberto, copia) |
+| **Gerar em lote…** | Escolhe um modelo salvo ou o tipo, a quantidade e o formato, e abre o resultado numa aba nova |
 | **Gerar documento…** | Escolhe qualquer um dos 17 documentos e insere no cursor (sem arquivo aberto, copia) |
 | **Gerar CPF / CNPJ / CNPJ alfanumérico** | Atalhos diretos, um número diferente para cada cursor |
 | **Validar documento (colar)…** | Caixa com resultado ao vivo |
@@ -94,12 +116,12 @@ Pela paleta (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>, digit
 | --- | --- | --- |
 | `kitDevBrasil.generate.formatted` | `true` | Inserir os documentos gerados com máscara |
 | `kitDevBrasil.hover.enabled` | `true` | Mostrar detalhes ao passar o mouse |
+| `kitDevBrasil.batch.templates` | `{}` | Modelos de **Gerar em lote** (de preferência no `.vscode/settings.json` do projeto) |
 
 ## O que vem por aí
 
 Acompanhe tudo no [roadmap](https://github.com/users/GabrielCordeiroBarrosoTeles/projects/4):
 
-- **Gerar em lote:** dezenas de registros como JSON, CSV, SQL ou array TypeScript, com **semente fixa** para testes reproduzíveis.
 - **Avisos no código** com correção rápida, **snippets** (`cpf` + Tab) e **histórico** no painel.
 - **Mais documentos:** inscrição estadual por estado, conta bancária, certidões e chave de NF-e.
 

@@ -4,6 +4,8 @@ export type PostMessage = (message: SidebarToHostMessage) => void;
 
 export interface VsCodeApi {
   postMessage(message: SidebarToHostMessage): void;
+  getState(): unknown;
+  setState(state: unknown): void;
 }
 
 declare global {

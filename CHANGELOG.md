@@ -6,6 +6,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Gerar em lote:** de 1 a 1000 pessoas, empresas ou documentos em JSON, CSV, SQL (`INSERT`) ou array TypeScript, abertos numa aba nova. Pelo painel (seção **Gerar em lote**) e pelo comando **Gerar em lote…**.
+- **Semente fixa:** a mesma semente gera sempre os mesmos dados; com semente, as datas partem de 01/01/2026 para o lote não mudar com o tempo.
+- Escolha dos campos e do nome de cada coluna.
+- Painel reorganizado em **abas** (Gerar, Pessoas, Lote, Validar e PIX), que lembra a última aba aberta e navega pelas setas do teclado. Documentos em duas linhas (nome e valor), para caber em qualquer largura da barra lateral.
+- **Modelos de lote** salvos nas configurações do projeto (`kitDevBrasil.batch.templates`), pelo botão **Salvar como modelo** ou à mão.
+
 ## [0.2.1] - 2026-10-19
 
 ### Adicionado

@@ -1,4 +1,5 @@
 import type { PixFormField, PixFormIssue } from '../application/pix/generateStaticPix';
+import type { BatchIssue } from './batchRequest';
 import type { BoletoIssue } from '../domain/boleto/types';
 import type { DocumentIssue } from '../domain/documents/types';
 import type { BrCodeField, BrCodeIssue, PixInitiation, PixKeyType } from '../domain/pix/types';
@@ -104,5 +105,22 @@ export const describePixFormIssue = (issue: PixFormIssue): string => {
       return `${label}: use números, como 10,50`;
     case 'invalid-txid':
       return `${label}: só letras e números, até 25`;
+  }
+};
+
+export const describeBatchIssue = (issue: BatchIssue): string => {
+  switch (issue.code) {
+    case 'invalid-source':
+      return 'Escolha o que gerar.';
+    case 'invalid-count':
+      return `A quantidade deve ser um número inteiro de ${issue.min} a ${issue.max}.`;
+    case 'invalid-format':
+      return 'Escolha o formato: JSON, CSV, SQL ou TypeScript.';
+    case 'invalid-name':
+      return `"${issue.name}" não serve como nome de tabela ou variável: use letras sem acento, números e _, começando por letra.`;
+    case 'invalid-column':
+      return `"${issue.column}" não serve como nome de coluna: use letras sem acento, números e _, começando por letra.`;
+    case 'no-columns':
+      return 'Marque pelo menos um campo.';
   }
 };

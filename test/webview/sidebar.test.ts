@@ -10,6 +10,8 @@ import { GeneratorList } from '../../src/webview/GeneratorList';
 import { InspectorSection } from '../../src/webview/InspectorSection';
 import { PixGeneratorForm } from '../../src/webview/PixGeneratorForm';
 import { ProfileGeneratorForm } from '../../src/webview/ProfileGeneratorForm';
+import { BatchForm } from '../../src/webview/BatchForm';
+import { stateStore, Tabs } from '../../src/webview/Tabs';
 
 const loadMarkup = () => {
   const html = renderSidebarHtml({ cspSource: 's', scriptUri: 'x.js', styleUri: 'x.css', nonce: 'n' });
@@ -219,16 +221,22 @@ describe('PixGeneratorForm', () => {
 describe('main', () => {
   it('wires every component to the host', async () => {
     const posted: SidebarToHostMessage[] = [];
-    vi.stubGlobal('acquireVsCodeApi', () => ({ postMessage: (message: SidebarToHostMessage) => posted.push(message) }));
+    vi.stubGlobal('acquireVsCodeApi', () => ({ postMessage: (message: SidebarToHostMessage) => posted.push(message), getState: () => ({ tab: 'pix' }), setState: () => undefined }));
     vi.resetModules();
     await import('../../src/webview/main');
     expect(posted).toEqual([{ type: 'ready' }]);
+    expect(element<HTMLElement>('#panel-pix').hidden).toBe(false);
+    expect(element<HTMLElement>('#panel-generate').hidden).toBe(true);
     const deliver = (message: HostToSidebarMessage) => window.dispatchEvent(new MessageEvent('message', { data: message }));
     deliver({ type: 'state', state: { generated: emptyGenerated({ cpf: '529.982.247-25' }), formatted: true } });
     deliver({ type: 'document-result', view: { state: 'valid', message: 'ok', formatted: 'x' } });
     deliver({ type: 'pix-result', view: { state: 'valid', summary: 'PIX válido', fields: [], issues: [] } });
     deliver({ type: 'boleto-result', view: { state: 'valid', summary: 'Boleto válido', fields: [], issues: [] } });
     deliver({ type: 'pix-generated', view: { code: 'CODE', qrDataUrl: 'data:,', issues: [] } });
+    deliver({ type: 'batch-state', templates: [{ name: 'm', values: { source: 'cpf', count: '2', format: 'csv', state: '', seed: '', name: '', columns: [] } }] });
+    deliver({ type: 'batch-result', issues: ['erro'] });
+    expect(element<HTMLElement>('#batch-issues').textContent).toBe('erro');
+    expect(element<HTMLSelectElement>('#batch-template').options).toHaveLength(2);
     deliver({ type: 'profile-generated', view: { fields: [['Nome', 'Ana']], exports: { json: '{}', typescript: '', text: '' } } });
     expect(element<HTMLElement>('#profile-fields .fields__value').textContent).toBe('Ana');
     expect(element<HTMLElement>('#boleto-summary').textContent).toBe('✅ Boleto válido');
@@ -308,5 +316,132 @@ describe('ProfileGeneratorForm', () => {
       { type: 'copy-text', text: 'const a = {};' },
       { type: 'copy-text', text: 'Nome: Ana' },
     ]);
+  });
+});
+
+describe('BatchForm', () => {
+  const setup = () => {
+    const posted: SidebarToHostMessage[] = [];
+    const form = new BatchForm(
+      {
+        template: element('#batch-template'),
+        source: element('#batch-source'),
+        count: element('#batch-count'),
+        format: element('#batch-format'),
+        state: element('#batch-state'),
+        seed: element('#batch-seed'),
+        name: element('#batch-name'),
+        columns: element('#batch-columns'),
+        generate: element('#batch-generate'),
+        save: element('#batch-save'),
+        issues: element('#batch-issues'),
+      },
+      (message) => posted.push(message),
+    );
+    return { posted, form };
+  };
+  const change = (selector: string, value: string) => {
+    const field = element<HTMLSelectElement>(selector);
+    field.value = value;
+    field.dispatchEvent(new Event('change'));
+  };
+  const columnInputs = () => [...document.querySelectorAll<HTMLInputElement>('#batch-columns input.field')];
+
+  it('offers every source and format and lists the columns of the chosen source', () => {
+    setup();
+    expect([...element<HTMLSelectElement>('#batch-source').querySelectorAll('optgroup')].map((group) => group.label)).toEqual(['Pessoas e empresas', 'Pessoa', 'Empresa', 'Endereço', 'Veículo', 'Cartão de crédito']);
+    expect([...element<HTMLSelectElement>('#batch-format').options].map((option) => option.value)).toEqual(['json', 'csv', 'sql', 'typescript']);
+    expect(columnInputs().map((input) => input.value)).toContain('tituloEleitor');
+    change('#batch-source', 'cep');
+    expect(columnInputs().map((input) => input.value)).toEqual(['cep']);
+  });
+
+  it('sends the chosen columns with their names', () => {
+    const { posted } = setup();
+    change('#batch-source', 'company');
+    const [firstCheck, secondCheck] = [...document.querySelectorAll<HTMLInputElement>('#batch-columns input[type="checkbox"]')];
+    const [firstName] = columnInputs();
+    Object.assign(firstName ?? {}, { value: 'name' });
+    Object.assign(secondCheck ?? {}, { checked: false });
+    expect(firstCheck?.checked).toBe(true);
+    element<HTMLInputElement>('#batch-count').value = '7';
+    element<HTMLInputElement>('#batch-seed').value = '42';
+    element<HTMLButtonElement>('#batch-generate').click();
+    element<HTMLButtonElement>('#batch-save').click();
+    const [generate, save] = posted;
+    expect(generate).toMatchObject({ type: 'batch-generate', values: { source: 'company', count: '7', seed: '42', format: 'json', state: '', name: '' } });
+    expect(generate?.type === 'batch-generate' && generate.values.columns.slice(0, 2)).toEqual([
+      { key: 'razaoSocial', column: 'name' },
+      { key: 'cnpj', column: 'cnpj' },
+    ]);
+    expect(save?.type).toBe('batch-save-template');
+  });
+
+  it('fills the form from a saved template and shows issues', () => {
+    const { form, posted } = setup();
+    form.renderTemplates([{ name: 'clientes', values: { source: 'person', count: '50', format: 'sql', state: 'SP', seed: '42', name: 'customers', columns: [{ key: 'cpf', column: 'document' }] } }]);
+    expect([...element<HTMLSelectElement>('#batch-template').options].map((option) => option.textContent)).toEqual(['Sem modelo salvo', 'clientes']);
+    change('#batch-template', 'clientes');
+    expect([element<HTMLInputElement>('#batch-count').value, element<HTMLSelectElement>('#batch-format').value, element<HTMLSelectElement>('#batch-state').value, element<HTMLInputElement>('#batch-name').value]).toEqual(['50', 'sql', 'SP', 'customers']);
+    element<HTMLButtonElement>('#batch-generate').click();
+    expect(posted.at(-1)?.type === 'batch-generate' && posted.at(-1)).toMatchObject({ values: { columns: [{ key: 'cpf', column: 'document' }] } });
+    change('#batch-template', '');
+    expect(element<HTMLInputElement>('#batch-count').value).toBe('50');
+    form.renderIssues(['Marque pelo menos um campo.']);
+    expect(element<HTMLElement>('#batch-issues').hidden).toBe(false);
+    form.renderIssues([]);
+    expect(element<HTMLElement>('#batch-issues').hidden).toBe(true);
+  });
+});
+
+describe('Tabs', () => {
+  const setup = (saved: string | undefined) => {
+    const stored: string[] = [];
+    const tabs = [...document.querySelectorAll<HTMLButtonElement>('.tab')];
+    const panels = [...document.querySelectorAll<HTMLElement>('.panel')];
+    new Tabs(tabs, panels, { get: () => saved, set: (tab) => stored.push(tab) });
+    const visible = () => panels.filter((panel) => !panel.hidden).map((panel) => panel.id);
+    const selected = () => tabs.filter((tab) => tab.getAttribute('aria-selected') === 'true').map((tab) => tab.dataset.tab);
+    const press = (tab: HTMLButtonElement | undefined, key: string) => tab?.dispatchEvent(new KeyboardEvent('keydown', { key, cancelable: true }));
+    return { tabs, stored, visible, selected, press };
+  };
+
+  it('renders the five tabs and opens the first one by default', () => {
+    const { tabs, visible, selected, stored } = setup(undefined);
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['Gerar', 'Pessoas', 'Lote', 'Validar', 'PIX']);
+    expect(visible()).toEqual(['panel-generate']);
+    expect(selected()).toEqual(['generate']);
+    expect(tabs.map((tab) => tab.tabIndex)).toEqual([0, -1, -1, -1, -1]);
+    expect(stored).toEqual(['generate']);
+  });
+
+  it('restores the saved tab, switches on click and remembers it', () => {
+    const { tabs, visible, stored } = setup('batch');
+    expect(visible()).toEqual(['panel-batch']);
+    tabs[3]?.click();
+    expect(visible()).toEqual(['panel-validate']);
+    expect(stored.at(-1)).toBe('validate');
+  });
+
+  it('moves with the arrow, Home and End keys and ignores other keys', () => {
+    const { tabs, selected, press } = setup('generate');
+    press(tabs[0], 'ArrowLeft');
+    expect(selected()).toEqual(['pix']);
+    expect(document.activeElement).toBe(tabs[4]);
+    press(tabs[4], 'ArrowRight');
+    expect(selected()).toEqual(['generate']);
+    press(tabs[0], 'End');
+    press(tabs[4], 'Home');
+    expect(selected()).toEqual(['generate']);
+    press(tabs[0], 'Enter');
+    expect(selected()).toEqual(['generate']);
+  });
+
+  it('reads and writes the tab in the webview state', () => {
+    const states: unknown[] = [];
+    const api = (state: unknown) => ({ getState: () => state, setState: (value: unknown) => states.push(value) });
+    expect([stateStore(api({ tab: 'pix' })).get(), stateStore(api(undefined)).get(), stateStore(api(null)).get(), stateStore(api({ tab: 3 })).get()]).toEqual(['pix', undefined, undefined, undefined]);
+    stateStore(api(undefined)).set('batch');
+    expect(states).toEqual([{ tab: 'batch' }]);
   });
 });

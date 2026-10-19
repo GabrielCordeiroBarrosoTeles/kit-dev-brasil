@@ -13,7 +13,7 @@ const ADDRESS_TITLE = 'Endereço';
 
 const toObject = (fields: readonly ProfileField[]): Record<string, string | number> => Object.fromEntries(fields.map(({ key, value }) => [key, value]));
 
-const literal = (value: string | number): string => (typeof value === 'number' ? String(value) : `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`);
+export const literal = (value: string | number): string => (typeof value === 'number' ? String(value) : `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`);
 
 const properties = (fields: readonly ProfileField[], indent: string): string[] => fields.map(({ key, value }) => `${indent}${key}: ${literal(value)},`);
 

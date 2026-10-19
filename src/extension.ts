@@ -3,6 +3,7 @@ import { createDocumentCatalog } from './application/catalog';
 import { DocumentGenerator } from './application/generation/DocumentGenerator';
 import { GeneratedValues } from './application/generation/GeneratedValues';
 import type { GeneratorId } from './application/generation/generatorIds';
+import { BatchGenerator } from './application/batch/BatchGenerator';
 import { AddressGenerator } from './application/people/AddressGenerator';
 import { CompanyGenerator } from './application/people/CompanyGenerator';
 import { PersonGenerator } from './application/people/PersonGenerator';
@@ -16,7 +17,10 @@ import { decodeBrCode } from './domain/pix/decodeBrCode';
 import { CryptoRandomSource } from './infrastructure/CryptoRandomSource';
 import { qrCodeDataUrl } from './infrastructure/qrCode';
 import { InspectionRenderer } from './presentation/InspectionRenderer';
+import { createRecordFactory } from './presentation/batchRecords';
 import { generateProfile } from './presentation/profiles';
+import { BatchRunner } from './vscode/batch/BatchRunner';
+import { GenerateBatchCommand } from './vscode/commands/GenerateBatchCommand';
 import type { ProfileGenerators, ProfileKind } from './presentation/profiles';
 import { GenerateProfileCommand } from './vscode/commands/GenerateProfileCommand';
 import { COMMAND_IDS } from './vscode/commands/commandIds';
@@ -31,7 +35,7 @@ import { ValidateSelectionCommand } from './vscode/commands/ValidateSelectionCom
 import { KitHoverProvider } from './vscode/KitHoverProvider';
 import { GENERATOR_GROUPS } from './shared/generatorCatalog';
 import { PickGeneratorCommand } from './vscode/commands/PickGeneratorCommand';
-import { VsCodeClipboard, VsCodeInputPrompt, VsCodeMarkdownPresenter, VsCodeNotifier, VsCodeQuickPick, VsCodeSettings } from './vscode/services';
+import { VsCodeClipboard, VsCodeDocumentOpener, VsCodeInputPrompt, VsCodeMarkdownPresenter, VsCodeNotifier, VsCodeQuickPick, VsCodeSettings } from './vscode/services';
 import { SidebarViewProvider } from './vscode/sidebar/SidebarViewProvider';
 import { ActiveEditorProvider } from './vscode/VsCodeEditor';
 
@@ -60,6 +64,7 @@ export function activate(context: vscode.ExtensionContext): void {
     company: new CompanyGenerator(catalog.company, addresses, random, today),
   };
   const quickPick = new VsCodeQuickPick();
+  const batch = new BatchRunner(new BatchGenerator(createRecordFactory(catalog), random, today), new VsCodeDocumentOpener(), notifier);
   const profileCommand = (commandId: string, kind: ProfileKind) =>
     new GenerateProfileCommand(commandId, kind, (chosen) => generateProfile(profiles, chosen, { state: undefined, formatted: settings.generateFormatted }), quickPick, clipboard, editors, notifier);
 
@@ -86,6 +91,7 @@ export function activate(context: vscode.ExtensionContext): void {
     new PickGeneratorCommand(COMMAND_IDS.generateDocument, quickPick, GENERATOR_GROUPS, (id) => generateCommand(COMMAND_IDS.generateDocument, id).execute()),
     profileCommand(COMMAND_IDS.generatePerson, 'person'),
     profileCommand(COMMAND_IDS.generateCompany, 'company'),
+    new GenerateBatchCommand(COMMAND_IDS.generateBatch, { picker: quickPick, prompt, settings, runner: batch, notifier, groups: GENERATOR_GROUPS }),
     formatSelection,
     unformatSelection,
     new TransformSelectionCommand(COMMAND_IDS.convertBoleto, (text) => convertBoleto(text, today()), COMMAND_MESSAGES.nothingToConvert, editors, notifier),
@@ -104,6 +110,8 @@ export function activate(context: vscode.ExtensionContext): void {
     decodeBoleto: (text) => decodeBoleto(text, today()),
     qrCode: qrCodeDataUrl,
     profiles,
+    batch,
+    prompt,
     report,
     clipboard,
     notifier,

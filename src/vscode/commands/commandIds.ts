@@ -5,6 +5,7 @@ export const COMMAND_IDS = {
   generateDocument: 'kitDevBrasil.generateDocument',
   generatePerson: 'kitDevBrasil.generatePerson',
   generateCompany: 'kitDevBrasil.generateCompany',
+  generateBatch: 'kitDevBrasil.generateBatch',
   formatSelection: 'kitDevBrasil.formatSelection',
   unformatSelection: 'kitDevBrasil.unformatSelection',
   validateSelection: 'kitDevBrasil.validateSelection',

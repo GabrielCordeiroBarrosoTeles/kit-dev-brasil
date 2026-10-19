@@ -13,7 +13,7 @@ import { COMMAND_IDS } from '../../src/vscode/commands/commandIds';
 import { registerCommands } from '../../src/vscode/commands/registerCommands';
 import { KitHoverProvider } from '../../src/vscode/KitHoverProvider';
 import { SidebarViewProvider } from '../../src/vscode/sidebar/SidebarViewProvider';
-import { VsCodeClipboard, VsCodeInputPrompt, VsCodeMarkdownPresenter, VsCodeNotifier, VsCodeQuickPick, VsCodeSettings } from '../../src/vscode/services';
+import { VsCodeClipboard, VsCodeDocumentOpener, VsCodeInputPrompt, VsCodeMarkdownPresenter, VsCodeNotifier, VsCodeQuickPick, VsCodeSettings } from '../../src/vscode/services';
 import { ActiveEditorProvider, VsCodeEditor } from '../../src/vscode/VsCodeEditor';
 import { commandHandlers, configuration, configurationUpdates, window as mockWindow, resetVscodeMock, Uri } from '../mocks/vscode';
 import { fakeSettings } from '../fakes/FakeEditor';
@@ -78,6 +78,25 @@ describe('services', () => {
     expect([settings.generateFormatted, settings.hoverEnabled]).toEqual([false, false]);
     await settings.setGenerateFormatted(true);
     expect(configurationUpdates).toEqual([['kitDevBrasil', 'generate.formatted', true, vscode.ConfigurationTarget.Global]]);
+  });
+
+  it('reads and saves batch templates in the workspace or globally', async () => {
+    const settings = new VsCodeSettings();
+    expect(settings.batchTemplates).toEqual({});
+    configuration.set('kitDevBrasil.batch.templates', { a: { source: 'cpf' } });
+    await settings.saveBatchTemplate('b', { source: 'cnpj' });
+    (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = [{}];
+    await settings.saveBatchTemplate('c', { source: 'cep' });
+    expect(configurationUpdates).toEqual([
+      ['kitDevBrasil', 'batch.templates', { a: { source: 'cpf' }, b: { source: 'cnpj' } }, vscode.ConfigurationTarget.Global],
+      ['kitDevBrasil', 'batch.templates', { a: { source: 'cpf' }, c: { source: 'cep' } }, vscode.ConfigurationTarget.Workspace],
+    ]);
+  });
+
+  it('opens generated content in a new tab', async () => {
+    await new VsCodeDocumentOpener().open('SELECT 1;', 'sql');
+    expect(vscode.workspace.openTextDocument).toHaveBeenCalledWith({ language: 'sql', content: 'SELECT 1;' });
+    expect(vscode.window.showTextDocument).toHaveBeenCalledWith(expect.objectContaining({ language: 'sql' }), { preview: false });
   });
 
   it('shows messages, markdown and writes to the clipboard', async () => {
@@ -226,6 +245,10 @@ describe('extension', () => {
     await commandHandlers.get(COMMAND_IDS.generatePerson)?.();
     await commandHandlers.get(COMMAND_IDS.generateCompany)?.();
     expect(withBoleto.replaced.slice(-2).map(([, text]) => Object.keys(JSON.parse(text))[0])).toEqual(['nome', 'razaoSocial']);
+    mockWindow.showQuickPick.mockResolvedValueOnce({ label: 'CPF', value: { source: 'cpf' } }).mockResolvedValueOnce({ label: 'SQL', value: 'sql' });
+    mockWindow.showInputBox.mockResolvedValueOnce('3');
+    await commandHandlers.get(COMMAND_IDS.generateBatch)?.();
+    expect(vscode.workspace.openTextDocument).toHaveBeenLastCalledWith({ language: 'sql', content: expect.stringMatching(/^INSERT INTO cpf \(cpf\) VALUES/) });
     expect(deactivate()).toBeUndefined();
   });
 });

@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
-import type { IClipboard, IInputPrompt, IMarkdownPresenter, INotifier, InputFeedback, InputRequest, IQuickPick, ISettings, PickEntry } from './types';
+import type { IClipboard, IDocumentOpener, IInputPrompt, IMarkdownPresenter, INotifier, InputFeedback, InputRequest, IQuickPick, ISettings, PickEntry } from './types';
 
 export const CONFIGURATION_SECTION = 'kitDevBrasil';
+
+const BATCH_TEMPLATES_KEY = 'batch.templates';
 
 export class VsCodeSettings implements ISettings {
   get generateFormatted(): boolean {
@@ -14,6 +16,15 @@ export class VsCodeSettings implements ISettings {
 
   async setGenerateFormatted(value: boolean): Promise<void> {
     await vscode.workspace.getConfiguration(CONFIGURATION_SECTION).update('generate.formatted', value, vscode.ConfigurationTarget.Global);
+  }
+
+  get batchTemplates(): Readonly<Record<string, unknown>> {
+    return vscode.workspace.getConfiguration(CONFIGURATION_SECTION).get<Record<string, unknown>>(BATCH_TEMPLATES_KEY, {});
+  }
+
+  async saveBatchTemplate(name: string, template: unknown): Promise<void> {
+    const target = (vscode.workspace.workspaceFolders ?? []).length > 0 ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+    await vscode.workspace.getConfiguration(CONFIGURATION_SECTION).update(BATCH_TEMPLATES_KEY, { ...this.batchTemplates, [name]: template }, target);
   }
 
   private read(key: string): boolean {
@@ -41,6 +52,13 @@ export class VsCodeMarkdownPresenter implements IMarkdownPresenter {
   async show(content: string): Promise<void> {
     const document = await vscode.workspace.openTextDocument({ language: 'markdown', content });
     await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.Beside, preview: true });
+  }
+}
+
+export class VsCodeDocumentOpener implements IDocumentOpener {
+  async open(content: string, language: string): Promise<void> {
+    const document = await vscode.workspace.openTextDocument({ language, content });
+    await vscode.window.showTextDocument(document, { preview: false });
   }
 }
 

@@ -20,6 +20,8 @@ import { sequenceRandom } from '../../fakes/random';
 import { BCB_PIX, OFFICIAL_BANK_BARCODE, OFFICIAL_BANK_LINE, VALID_CNPJ_DIGITS, VALID_CPF, VALID_CPF_DIGITS } from '../../fakes/samples';
 import { catalogGenerators, emptyGenerated } from '../../fakes/generators';
 import { Uri } from '../../mocks/vscode';
+import type { BatchRequest } from '../../../src/application/batch/types';
+import type { InputRequest } from '../../../src/vscode/types';
 import { fakeProfiles } from '../../fakes/profiles';
 
 const setup = () => {
@@ -40,6 +42,9 @@ const setup = () => {
   const report = { present: vi.fn((_text: string) => Promise.resolve()) };
   const formatSelection = { id: 'f', execute: vi.fn(() => Promise.resolve()) };
   const unformatSelection = { id: 'u', execute: vi.fn(() => Promise.resolve()) };
+  const batch = { run: vi.fn((_request: BatchRequest) => Promise.resolve()) };
+  const answers: (string | undefined)[] = [];
+  const prompt = { ask: vi.fn((_request: InputRequest) => Promise.resolve(answers.shift())) };
   const provider = new SidebarViewProvider(
     new Uri('/ext') as unknown as vscode.Uri,
     {
@@ -51,6 +56,8 @@ const setup = () => {
       decodeBoleto: decodeTestBoleto,
       qrCode: (text: string) => `data:qr,${text.length}`,
       profiles: fakeProfiles(),
+      batch,
+      prompt,
       report: report as unknown as PixReport,
       clipboard,
       notifier,
@@ -81,7 +88,7 @@ const setup = () => {
     },
   };
   provider.resolveWebviewView(view as unknown as vscode.WebviewView);
-  return { provider, webview, posted, send: (message: unknown) => receive(message), disposeView: () => disposeView(), values, settings, clipboard, notifier, report, formatSelection, unformatSelection };
+  return { provider, webview, posted, send: (message: unknown) => receive(message), disposeView: () => disposeView(), values, settings, clipboard, notifier, report, formatSelection, unformatSelection, batch, prompt, answers };
 };
 
 describe('renderSidebarHtml', () => {
@@ -108,7 +115,10 @@ describe('SidebarViewProvider', () => {
   it('sends the state when ready and whenever a value is generated', async () => {
     const { send, posted, clipboard, notifier } = setup();
     await send({ type: 'ready' });
-    expect(posted.at(-1)).toEqual({ type: 'state', state: { generated: emptyGenerated(), formatted: true } });
+    expect(posted.slice(-2)).toEqual([
+      { type: 'state', state: { generated: emptyGenerated(), formatted: true } },
+      { type: 'batch-state', templates: [] },
+    ]);
     await send({ type: 'generate', id: 'cpf' });
     expect(posted.at(-1)).toMatchObject({ type: 'state', state: { generated: { cpf: VALID_CPF } } });
     expect(clipboard.writeText).toHaveBeenLastCalledWith(VALID_CPF);
@@ -226,6 +236,31 @@ describe('SidebarViewProvider', () => {
     expect(fallback?.type === 'profile-generated' && fallback.view.fields[0]?.[0]).toBe('Nome');
   });
 
+  it('generates batches and saves templates', async () => {
+    const values = { source: 'person', count: '3', format: 'sql', state: 'SP', seed: '42', name: 'customers', columns: [{ key: 'nome', column: 'full_name' }] };
+    const { send, posted, batch, prompt, answers, settings, notifier } = setup();
+    settings.generateFormatted = false;
+    await send({ type: 'batch-generate', values });
+    expect(posted.at(-1)).toEqual({ type: 'batch-result', issues: [] });
+    expect(batch.run).toHaveBeenCalledWith({ source: 'person', count: 3, format: 'sql', state: 'SP', seed: '42', name: 'customers', formatted: false, columns: [{ key: 'nome', column: 'full_name' }] });
+    await send({ type: 'batch-generate', values: { ...values, count: '0' } });
+    await send({ type: 'batch-generate', values: null });
+    expect(batch.run).toHaveBeenCalledOnce();
+    expect(posted.at(-1)).toEqual({ type: 'batch-result', issues: ['Escolha o que gerar.'] });
+    await send({ type: 'batch-save-template', values: { ...values, format: 'xml' } });
+    expect(prompt.ask).not.toHaveBeenCalled();
+    answers.push(undefined, '   ', ' clientes ');
+    await send({ type: 'batch-save-template', values });
+    await send({ type: 'batch-save-template', values });
+    expect(settings.saveBatchTemplate).not.toHaveBeenCalled();
+    await send({ type: 'batch-save-template', values });
+    const feedback = prompt.ask.mock.calls[0]?.[0].feedback;
+    expect([feedback?.(' '), feedback?.('x')]).toEqual([{ valid: false, message: COMMAND_MESSAGES.templateNameRequired }, undefined]);
+    expect(settings.saveBatchTemplate).toHaveBeenCalledWith('clientes', { source: 'person', count: 3, format: 'sql', state: 'SP', seed: '42', name: 'customers', formatted: false, columns: { nome: 'full_name' } });
+    expect(posted.at(-1)).toMatchObject({ type: 'batch-state', templates: [{ name: 'clientes', values: { count: '3', seed: '42' } }] });
+    expect(notifier.statuses.at(-1)).toBe(COMMAND_MESSAGES.templateSaved('clientes'));
+  });
+
   it('runs the selection commands', async () => {
     const { send, formatSelection, unformatSelection } = setup();
     await send({ type: 'format-selection' });
@@ -264,6 +299,8 @@ function setupServices() {
     decodeBoleto: decodeTestBoleto,
     qrCode: () => '',
     profiles: fakeProfiles(),
+    batch: { run: () => Promise.resolve() },
+    prompt: { ask: () => Promise.resolve(undefined) },
     report: {} as PixReport,
     clipboard: { writeText: () => Promise.resolve() },
     notifier: new FakeNotifier(),

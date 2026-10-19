@@ -5,7 +5,7 @@ import type { SidebarState } from '../shared/sidebarProtocol';
 import { createElement, iconButton } from './dom';
 import type { PostMessage } from './types';
 
-const EMPTY_VALUE = 'clique em ↻ para gerar';
+const EMPTY_VALUE = '—';
 const OPEN_GROUPS = 1;
 
 export class GeneratorList {
@@ -44,8 +44,10 @@ export class GeneratorList {
     value.title = 'Clique para copiar';
     value.addEventListener('click', () => this.post({ type: 'copy-generated', id }));
     this.values.set(id, value);
+    const name = createElement('span', 'generator__label', label);
+    name.title = label;
     row.append(
-      createElement('span', 'generator__label', label),
+      name,
       value,
       iconButton('⧉', `Copiar ${label}`, () => this.post({ type: 'copy-generated', id })),
       iconButton('↻', `Gerar outro ${label}`, () => this.post({ type: 'generate', id })),

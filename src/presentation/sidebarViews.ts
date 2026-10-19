@@ -2,7 +2,9 @@ import type { DocumentInspection } from '../application/inspection/types';
 import { summarizeCandidates } from './candidateSummary';
 import type { BoletoDecoding } from '../domain/boleto/types';
 import type { BrCodeDecoding } from '../domain/pix/types';
-import type { BoletoView, DocumentView, InspectionView, PixView, ProfileView } from '../shared/sidebarProtocol';
+import type { BatchRequest } from '../application/batch/types';
+import type { BatchFormValues, BatchTemplateView, BoletoView, DocumentView, InspectionView, PixView, ProfileView } from '../shared/sidebarProtocol';
+import type { NamedBatchRequest } from './batchRequest';
 import type { InspectionRenderer } from './InspectionRenderer';
 import { describeBoletoIssue, describeBrCodeIssue } from './messages';
 import { describePixFields } from './pixFields';
@@ -38,3 +40,16 @@ export const toProfileView = (profile: Profile): ProfileView => ({
   fields: [...profile.fields, ...profile.address].map(({ label, display }) => [label, display] as const),
   exports: Object.fromEntries(EXPORT_FORMATS.map((format) => [format, exportProfile(profile, format)])) as Record<ExportFormat, string>,
 });
+
+export const toBatchFormValues = ({ source, count, state, format, seed, name, columns }: BatchRequest): BatchFormValues => ({
+  source,
+  count: String(count),
+  state: state ?? '',
+  format,
+  seed: seed ?? '',
+  name,
+  columns,
+});
+
+export const toBatchTemplateViews = (templates: readonly NamedBatchRequest[]): readonly BatchTemplateView[] =>
+  templates.map(({ name, request }) => ({ name, values: toBatchFormValues(request) }));

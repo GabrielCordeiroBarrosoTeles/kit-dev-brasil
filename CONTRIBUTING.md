@@ -56,7 +56,8 @@ src/
     pix/            CRC16, TLV, decodificação e codificação do BR Code, regras de validação
   application/      Casos de uso: achar tokens na linha, inspecionar, transformar e gerar
     people/         Pessoas e empresas fictícias coerentes (cidade → CEP → DDD → título)
-  presentation/     Textos em português, renderização em Markdown e exportação (JSON, TypeScript, texto)
+    batch/          Geração em lote, com semente (SeededRandom) ou aleatória
+  presentation/     Textos em português, renderização em Markdown, exportação (JSON, TypeScript, texto, CSV, SQL) e saneamento dos pedidos de lote
   infrastructure/   Implementações que dependem do Node (aleatoriedade segura)
   shared/           Protocolo tipado entre a extensão e o painel da barra lateral
   vscode/           Adaptadores finos: hover, editor, configurações, notificações, comandos e o provider do painel
@@ -70,6 +71,7 @@ Padrões usados:
 - **Template Method:** os comandos estendem `EditorCommand`, que já trata o caso de não haver editor aberto.
 - **Adapter:** o resto do código fala com interfaces (`IEditor`, `ISettings`, `INotifier`); só `src/vscode/` importa a API do VS Code.
 - **Result tipado** em vez de exceções para validação, e `RandomSource` injetado para testes determinísticos.
+- **Painel em abas:** a lista de abas fica em `shared/sidebarTabs.ts`, o HTML de cada aba em `vscode/sidebar/sidebarPanels.ts` e as opções dos selects em `sidebarOptions.ts`; o componente `webview/Tabs.ts` troca as abas e guarda a última no estado da webview.
 - **Painel como view:** a página da barra lateral não tem regra de negócio. Ela manda mensagens tipadas (`shared/sidebarProtocol.ts`) e a extensão responde com view models prontos (`presentation/sidebarViews.ts`). O HTML usa CSP com nonce e só `textContent`, nunca `innerHTML`.
 
 ## Regras dos documentos

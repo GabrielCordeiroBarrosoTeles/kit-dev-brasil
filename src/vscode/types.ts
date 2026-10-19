@@ -16,7 +16,9 @@ export interface IEditorProvider {
 export interface ISettings {
   readonly generateFormatted: boolean;
   readonly hoverEnabled: boolean;
+  readonly batchTemplates: Readonly<Record<string, unknown>>;
   setGenerateFormatted(value: boolean): Promise<void>;
+  saveBatchTemplate(name: string, template: unknown): Promise<void>;
 }
 
 export interface INotifier {
@@ -53,4 +55,8 @@ export type PickEntry<T> = { readonly separator: string } | { readonly label: st
 
 export interface IQuickPick {
   pick<T>(entries: readonly PickEntry<T>[], placeholder: string): Promise<T | undefined>;
+}
+
+export interface IDocumentOpener {
+  open(content: string, language: string): Promise<void>;
 }

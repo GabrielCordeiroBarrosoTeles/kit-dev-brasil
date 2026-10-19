@@ -98,6 +98,7 @@ export const window = {
 };
 
 export const workspace = {
+  workspaceFolders: undefined as readonly unknown[] | undefined,
   getConfiguration: vi.fn((section: string) => ({
     get: <T>(key: string, fallback: T): T => (configuration.has(`${section}.${key}`) ? (configuration.get(`${section}.${key}`) as T) : fallback),
     update: (key: string, value: unknown, target: number) => {
@@ -125,6 +126,7 @@ export const languages = {
 
 export const resetVscodeMock = (): void => {
   window.activeTextEditor = undefined;
+  workspace.workspaceFolders = undefined;
   configuration.clear();
   configurationUpdates.length = 0;
   commandHandlers.clear();
