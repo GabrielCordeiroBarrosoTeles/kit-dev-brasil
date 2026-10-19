@@ -1,4 +1,4 @@
 export interface ICommand {
   readonly id: string;
-  execute(): Promise<void>;
+  execute(argument?: unknown): Promise<void>;
 }

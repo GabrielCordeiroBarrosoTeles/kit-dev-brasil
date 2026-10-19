@@ -54,7 +54,9 @@ src/
   application/      Casos de uso: achar tokens na linha, inspecionar, transformar e gerar
   presentation/     Textos em português e renderização em Markdown
   infrastructure/   Implementações que dependem do Node (aleatoriedade segura)
-  vscode/           Adaptadores finos: hover, editor, configurações, notificações e comandos
+  shared/           Protocolo tipado entre a extensão e o painel da barra lateral
+  vscode/           Adaptadores finos: hover, editor, configurações, notificações, comandos e o provider do painel
+  webview/          O painel da barra lateral (roda no navegador do VS Code): só desenha e envia pedidos
 ```
 
 Padrões usados:
@@ -64,6 +66,7 @@ Padrões usados:
 - **Template Method:** os comandos estendem `EditorCommand`, que já trata o caso de não haver editor aberto.
 - **Adapter:** o resto do código fala com interfaces (`IEditor`, `ISettings`, `INotifier`); só `src/vscode/` importa a API do VS Code.
 - **Result tipado** em vez de exceções para validação, e `RandomSource` injetado para testes determinísticos.
+- **Painel como view:** a página da barra lateral não tem regra de negócio. Ela manda mensagens tipadas (`shared/sidebarProtocol.ts`) e a extensão responde com view models prontos (`presentation/sidebarViews.ts`). O HTML usa CSP com nonce e só `textContent`, nunca `innerHTML`.
 
 ## Testes e cobertura
 

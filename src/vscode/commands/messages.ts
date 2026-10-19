@@ -8,4 +8,12 @@ export const COMMAND_MESSAGES = {
   pixInspected: 'PIX inspecionado.',
   copyJson: 'Copiar JSON',
   jsonCopied: 'JSON do PIX copiado.',
+  copied: (label: string, value: string) => `${label} ${value} copiado para a área de transferência.`,
+  validateTitle: 'Validar CPF ou CNPJ',
+  validatePlaceholder: 'Cole um CPF ou CNPJ, com ou sem máscara',
+  notADocumentShort: 'Não parece um CPF ou CNPJ',
+  copyFormatted: 'Copiar formatado',
+  formattedCopied: (value: string) => `${value} copiado.`,
+  pixTitle: 'Inspecionar PIX copia-e-cola',
+  pixPlaceholder: 'Cole o código PIX copia-e-cola',
 } as const;

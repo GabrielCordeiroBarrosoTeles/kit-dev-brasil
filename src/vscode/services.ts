@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import type { IClipboard, IMarkdownPresenter, INotifier, ISettings } from './types';
+import type { IClipboard, IInputPrompt, IMarkdownPresenter, INotifier, InputFeedback, InputRequest, ISettings } from './types';
 
 export const CONFIGURATION_SECTION = 'kitDevBrasil';
 
@@ -12,10 +12,16 @@ export class VsCodeSettings implements ISettings {
     return this.read('hover.enabled');
   }
 
+  async setGenerateFormatted(value: boolean): Promise<void> {
+    await vscode.workspace.getConfiguration(CONFIGURATION_SECTION).update('generate.formatted', value, vscode.ConfigurationTarget.Global);
+  }
+
   private read(key: string): boolean {
     return vscode.workspace.getConfiguration(CONFIGURATION_SECTION).get<boolean>(key, true);
   }
 }
+
+const STATUS_TIMEOUT_MS = 3000;
 
 export class VsCodeNotifier implements INotifier {
   async info(message: string, ...actions: string[]): Promise<string | undefined> {
@@ -24,6 +30,10 @@ export class VsCodeNotifier implements INotifier {
 
   warn(message: string): void {
     void vscode.window.showWarningMessage(message);
+  }
+
+  status(message: string): void {
+    vscode.window.setStatusBarMessage(`$(check) ${message}`, STATUS_TIMEOUT_MS);
   }
 }
 
@@ -37,5 +47,25 @@ export class VsCodeMarkdownPresenter implements IMarkdownPresenter {
 export class VsCodeClipboard implements IClipboard {
   async writeText(text: string): Promise<void> {
     await vscode.env.clipboard.writeText(text);
+  }
+}
+
+const toValidationMessage = (feedback: InputFeedback): vscode.InputBoxValidationMessage => ({
+  message: `${feedback.valid ? '✅' : '❌'} ${feedback.message}`,
+  severity: feedback.valid ? vscode.InputBoxValidationSeverity.Info : vscode.InputBoxValidationSeverity.Warning,
+});
+
+export class VsCodeInputPrompt implements IInputPrompt {
+  async ask({ title, placeholder, value, feedback }: InputRequest): Promise<string | undefined> {
+    return vscode.window.showInputBox({
+      title,
+      placeHolder: placeholder,
+      value,
+      ignoreFocusOut: true,
+      validateInput: (text) => {
+        const result = feedback(text);
+        return result && toValidationMessage(result);
+      },
+    });
   }
 }

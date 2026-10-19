@@ -62,6 +62,17 @@ describe('messages', () => {
 });
 
 describe('InspectionRenderer', () => {
+  it('summarizes PIX codes in one line', () => {
+    const valid = (overrides: Partial<BrCode>) => renderer.summarizePix({ brCode: brCode(overrides), issues: [] });
+    expect(valid({ amount: '25.90', merchantName: 'FULANO' })).toMatch(/^PIX válido: R\$\s25,90 para FULANO$/);
+    expect(valid({})).toBe('PIX válido: valor livre');
+    expect(renderer.summarizePix({ brCode: undefined, issues: [] })).toBe('PIX válido: valor livre');
+    expect(renderer.summarizePix({ brCode: undefined, issues: [{ code: 'malformed', position: 0 }] })).toBe('PIX inválido: estrutura inválida a partir da posição 1');
+    const issues = [{ code: 'missing-field', field: 'crc' }, { code: 'missing-field', field: 'mcc' }, { code: 'missing-field', field: 'country' }] as const;
+    expect(renderer.summarizePix({ brCode: undefined, issues: issues.slice(0, 2) })).toBe('PIX inválido: falta o campo CRC (63) (+1 problema)');
+    expect(renderer.summarizePix({ brCode: undefined, issues })).toBe('PIX inválido: falta o campo CRC (63) (+2 problemas)');
+  });
+
   it('renders valid and invalid documents', () => {
     expect(renderer.render(document())).toBe('✅ CPF 529\\.982\\.247\\-25 é válido');
     const invalid = document({ formatted: '529.982.247-26', validation: { valid: false, issue: { code: 'repeated-characters' } } });
@@ -90,7 +101,7 @@ describe('InspectionRenderer', () => {
       },
     });
     expect(markdown).toContain('**PIX copia-e-cola** · ✅ válido');
-    expect(markdown).toContain('| Chave | fulano@exemplo\\.com (e-mail) |');
+    expect(markdown).toContain('| Chave | fulano@exemplo\\.com \\(e\\-mail\\) |');
     expect(markdown).toContain('R$');
     expect(markdown).toContain('FULANO \\| CIA');
     expect(markdown).toContain('estático');
@@ -100,7 +111,7 @@ describe('InspectionRenderer', () => {
   it('renders free amounts, unknown key types, odd amounts and issues', () => {
     const free = renderer.render({ kind: 'pix', decoding: { brCode: brCode({ key: 'qualquer' }), issues: [] } });
     expect(free).toContain('| Chave | qualquer |');
-    expect(free).toContain('livre (quem paga digita)');
+    expect(free).toContain('livre \\(quem paga digita\\)');
     expect(free).not.toContain('| URL |');
     const odd = renderer.render({ kind: 'pix', decoding: { brCode: brCode({ amount: 'abc', merchantName: '' }), issues: [{ code: 'invalid-amount', actual: 'abc' }] } });
     expect(odd).toContain('| Valor | abc |');

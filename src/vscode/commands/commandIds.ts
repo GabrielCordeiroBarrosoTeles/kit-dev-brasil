@@ -6,4 +6,6 @@ export const COMMAND_IDS = {
   unformatSelection: 'kitDevBrasil.unformatSelection',
   validateSelection: 'kitDevBrasil.validateSelection',
   inspectPix: 'kitDevBrasil.inspectPix',
+  validateInput: 'kitDevBrasil.validateInput',
+  inspectPixInput: 'kitDevBrasil.inspectPixInput',
 } as const;

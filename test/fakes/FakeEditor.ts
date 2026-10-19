@@ -1,4 +1,18 @@
-import type { CursorLine, IEditor, IEditorProvider, INotifier } from '../../src/vscode/types';
+import { vi } from 'vitest';
+import type { CursorLine, IEditor, IEditorProvider, INotifier, ISettings } from '../../src/vscode/types';
+
+export const fakeSettings = (overrides: Partial<Pick<ISettings, 'generateFormatted' | 'hoverEnabled'>> = {}) => {
+  const settings = {
+    generateFormatted: true,
+    hoverEnabled: true,
+    ...overrides,
+    setGenerateFormatted: vi.fn((value: boolean) => {
+      settings.generateFormatted = value;
+      return Promise.resolve();
+    }),
+  };
+  return settings;
+};
 
 export class FakeEditor implements IEditor {
   replacements: (readonly (string | undefined)[])[] = [];
@@ -27,6 +41,7 @@ export const editorProvider = (editor: IEditor | undefined): IEditorProvider => 
 export class FakeNotifier implements INotifier {
   readonly infos: string[] = [];
   readonly warnings: string[] = [];
+  readonly statuses: string[] = [];
 
   constructor(private readonly choice: string | undefined = undefined) {}
 
@@ -37,5 +52,9 @@ export class FakeNotifier implements INotifier {
 
   warn(message: string): void {
     this.warnings.push(message);
+  }
+
+  status(message: string): void {
+    this.statuses.push(message);
   }
 }

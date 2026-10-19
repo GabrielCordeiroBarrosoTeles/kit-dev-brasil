@@ -85,8 +85,36 @@
         "command": "kitDevBrasil.inspectPix",
         "title": "Inspecionar PIX copia-e-cola",
         "category": "Kit Dev Brasil"
+      },
+      {
+        "command": "kitDevBrasil.validateInput",
+        "title": "Validar CPF ou CNPJ (colar)…",
+        "category": "Kit Dev Brasil"
+      },
+      {
+        "command": "kitDevBrasil.inspectPixInput",
+        "title": "Inspecionar PIX (colar código)…",
+        "category": "Kit Dev Brasil"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "kitDevBrasil",
+          "title": "Kit Dev Brasil",
+          "icon": "assets/sidebar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "kitDevBrasil": [
+        {
+          "type": "webview",
+          "id": "kitDevBrasil.tools",
+          "name": "Ferramentas"
+        }
+      ]
+    },
     "submenus": [
       {
         "id": "kitDevBrasil.editorContext",
@@ -166,6 +194,7 @@
     "@vitest/coverage-v8": "4.1.12",
     "@vscode/vsce": "4.0.0",
     "esbuild": "0.28.2",
+    "happy-dom": "21.0.3",
     "typescript": "5.9.3",
     "vitest": "4.1.12"
   }

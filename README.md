@@ -32,7 +32,14 @@ O comando **Kit Dev Brasil: Inspecionar PIX copia-e-cola** abre o mesmo resultad
 - **Hover** sobre CPF e CNPJ com máscara mostra se são válidos. Números sem máscara só aparecem quando válidos, para não confundir com telefones e outros números.
 
 ### Como usar
-Todos os comandos estão na paleta (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>, digite **Kit Dev Brasil**) e no menu do botão direito, no submenu **Kit Dev Brasil**.
+O Kit Dev Brasil tem um **ícone próprio na barra lateral** (o losango da bandeira). Ele abre o painel **Ferramentas**, com tudo no próprio painel:
+
+- **Gerar:** CPF, CNPJ e CNPJ alfanumérico aparecem no painel e já vão para a área de transferência, **sem mexer no seu código**. Ao lado de cada um ficam os botões **copiar** e **gerar outro**, e a caixa **com máscara** escolhe o formato.
+- **Validar CPF ou CNPJ:** um campo para colar ou digitar, com o resultado **ao vivo** (*✅ CPF 529.982.247-25 é válido*) e o botão **Copiar formatado**.
+- **PIX copia-e-cola:** cole o código e veja na hora se é válido, com chave, valor, recebedor, cidade e txid, os problemas encontrados e os botões **Abrir relatório** e **Copiar JSON**.
+- **Texto selecionado no editor:** **Formatar** e **Remover máscara**.
+
+Pela paleta (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>, digite **Kit Dev Brasil**) ou pelo menu do botão direito (submenu **Kit Dev Brasil**), os comandos **Gerar CPF/CNPJ** inserem o número direto no cursor, um diferente para cada cursor.
 
 | Configuração | Padrão | O que faz |
 | --- | --- | --- |

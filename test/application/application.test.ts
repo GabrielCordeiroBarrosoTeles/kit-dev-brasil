@@ -85,9 +85,10 @@ describe('TextTransformer', () => {
 
 describe('DocumentGenerator', () => {
   it('generates with or without mask', () => {
-    const generator = new DocumentGenerator({ cpf: { type: cpf, generate: () => VALID_CPF_DIGITS } }, sequenceRandom([0]));
+    const generator = new DocumentGenerator({ cpf: { label: 'CPF', type: cpf, generate: () => VALID_CPF_DIGITS } }, sequenceRandom([0]));
     expect(generator.generate('cpf', true)).toBe(VALID_CPF);
     expect(generator.generate('cpf', false)).toBe(VALID_CPF_DIGITS);
+    expect(generator.label('cpf')).toBe('CPF');
   });
 });
 

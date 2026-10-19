@@ -7,7 +7,7 @@ export const pixComCrcErrado =
 export const pixDoManualDoBancoCentral =
   '00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-4266554400005204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***63041D3D';
 
-export const cpfValido = '529.982.247-25';
+export const cpfValido = '52998224725';
 export const cpfInvalido = '529.982.247-26';
 export const cpfSemMascara = '52998224725';
 

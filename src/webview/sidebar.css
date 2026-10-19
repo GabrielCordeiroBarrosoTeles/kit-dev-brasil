@@ -1,0 +1,201 @@
+:root {
+  --kit-valid: var(--vscode-testing-iconPassed, #3fb950);
+  --kit-invalid: var(--vscode-errorForeground, #f85149);
+  --kit-unknown: var(--vscode-editorWarning-foreground, #d29922);
+}
+
+body {
+  margin: 0;
+  padding: 4px 12px 16px;
+  color: var(--vscode-foreground);
+  background: transparent;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+}
+
+.section {
+  padding: 10px 0 12px;
+  border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border, var(--vscode-widget-border, transparent));
+}
+
+.section:last-of-type {
+  border-bottom: none;
+}
+
+.section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vscode-sideBarTitle-foreground, var(--vscode-foreground));
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+}
+
+.generators {
+  display: grid;
+  gap: 4px;
+}
+
+.generator {
+  display: grid;
+  grid-template-columns: minmax(64px, auto) 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+}
+
+.generator__label {
+  white-space: nowrap;
+}
+
+.generator__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size, 12px);
+  color: var(--vscode-textPreformat-foreground, var(--vscode-foreground));
+  cursor: copy;
+}
+
+.generator__value--empty {
+  font-family: var(--vscode-font-family);
+  font-style: italic;
+  color: var(--vscode-descriptionForeground);
+  cursor: default;
+}
+
+.icon-button {
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  color: var(--vscode-icon-foreground, var(--vscode-foreground));
+  background: transparent;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.field {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 2px;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size, 12px);
+}
+
+.field:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
+.field::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.field--multiline {
+  resize: vertical;
+  word-break: break-all;
+}
+
+.result {
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+.result[data-state='valid'] {
+  color: var(--kit-valid);
+}
+
+.result[data-state='invalid'] {
+  color: var(--kit-invalid);
+}
+
+.result[data-state='unknown'] {
+  color: var(--kit-unknown);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  margin: 8px 0 0;
+}
+
+.fields__label {
+  color: var(--vscode-descriptionForeground);
+}
+
+.fields__value {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.issues {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--kit-invalid);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.actions:empty,
+[hidden] {
+  display: none !important;
+}
+
+.button {
+  padding: 4px 10px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 2px;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.button--secondary {
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+}
+
+.button--secondary:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
