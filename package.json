@@ -315,7 +315,7 @@
     "@vitest/coverage-v8": "4.1.12",
     "@vscode/vsce": "4.0.0",
     "esbuild": "0.28.2",
-    "happy-dom": "21.0.3",
+    "happy-dom": "21.0.4",
     "typescript": "5.9.3",
     "vitest": "4.1.12"
   },
