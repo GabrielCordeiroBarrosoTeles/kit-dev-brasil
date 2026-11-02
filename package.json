@@ -313,7 +313,7 @@
     "@types/node": "20.19.43",
     "@types/vscode": "1.95.0",
     "@vitest/coverage-v8": "4.1.12",
-    "@vscode/vsce": "4.0.0",
+    "@vscode/vsce": "4.1.0",
     "esbuild": "0.28.2",
     "happy-dom": "21.0.3",
     "typescript": "5.9.3",
